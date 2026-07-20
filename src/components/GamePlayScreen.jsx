@@ -56,6 +56,28 @@ function GamePlayScreen({
   const pauseTimeRef = useRef(0);
   const accumulatedPlayTimeRef = useRef(0);
 
+  const [isStandby, setIsStandby] = useState(true);
+  const [isStarting, setIsStarting] = useState(false);
+  const isEndingRef = useRef(false);
+  const chartEndTimeRef = useRef(9999);
+
+  const scoreRef = useRef(0);
+  const maxComboRef = useRef(0);
+
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
+  useEffect(() => {
+    if (combo > maxCombo) {
+      setMaxCombo(combo);
+    }
+  }, [combo, maxCombo]);
+
+  useEffect(() => {
+    maxComboRef.current = maxCombo;
+  }, [maxCombo]);
+
   // Resize listener
   useEffect(() => {
     if (containerRef.current) {
@@ -89,29 +111,37 @@ function GamePlayScreen({
     sfxGain.connect(audioCtx.destination);
     sfxGainNodeRef.current = sfxGain;
 
-    // Resume context if suspended from previous quit
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
 
-    // Set up notes
-    notesRef.current = generateBeatmap(bgmBuffer.duration, song.bpm);
+    notesRef.current = initializeNotes();
     particlesRef.current = [];
     accumulatedPlayTimeRef.current = 0;
     pauseTimeRef.current = 0;
+    
+    let maxTime = 0;
+    if (notesRef.current.length > 0) {
+      notesRef.current.forEach(n => {
+        const endTime = n.time + (n.duration || 0);
+        if (endTime > maxTime) maxTime = endTime;
+      });
+    }
+    chartEndTimeRef.current = maxTime > 0 ? maxTime : bgmBuffer.duration - 2.0;
+    isEndingRef.current = false;
 
-    // Start BGM playback
+    // Create source node but wait for standby press to play
     const source = audioCtx.createBufferSource();
     source.buffer = bgmBuffer;
     source.connect(bgmGain);
     bgmSourceRef.current = source;
 
-    startTimeRef.current = audioCtx.currentTime;
+    // Standby mode is active
+    setIsStandby(true);
+    setIsStarting(false);
     isPlayingRef.current = true;
 
-    source.start(0);
-
-    // Start animation frame loop
+    // Start animation frame loop immediately so standby messages render
     animationFrameId.current = requestAnimationFrame(updateGameFrame);
 
     return () => {
@@ -138,6 +168,35 @@ function GamePlayScreen({
       sfxGainNodeRef.current.gain.setValueAtTime(sfxVolume, audioCtx.currentTime);
     }
   }, [sfxVolume, audioCtx]);
+
+  // Custom or procedural note initializer
+  const initializeNotes = () => {
+    console.log("=== initializeNotes ===");
+    console.log("Active song object:", song);
+    if (song.chart && Array.isArray(song.chart)) {
+      console.log(`Custom chart detected! Note count: ${song.chart.length}`);
+      const mapped = song.chart.map((note, index) => {
+        const timeInSeconds = note.beat * (60 / song.bpm);
+        const durationInSeconds = note.durationBeats ? note.durationBeats * (60 / song.bpm) : 0;
+        return {
+          id: `${note.beat}-${note.lane}-${index}`,
+          time: timeInSeconds,
+          duration: durationInSeconds,
+          lane: note.lane,
+          type: note.type || 'short',
+          hit: false,
+          miss: false,
+          hitStart: false,
+          hitEnd: false,
+          active: false
+        };
+      });
+      console.log("Mapped notes array:", mapped);
+      return mapped;
+    }
+    console.log("No custom chart found. Generating procedural beatmap...");
+    return generateBeatmap(bgmBuffer.duration, song.bpm);
+  };
 
   // Chart Generator
   const generateBeatmap = (duration, bpm) => {
@@ -257,7 +316,24 @@ function GamePlayScreen({
 
   const handleKeyPress = (lane) => {
     playKeycapSound();
-    if (!isPlayingRef.current || isPaused || countdown !== null) return;
+    
+    // Start BGM on first keypress
+    if (isStandby) {
+      if (audioCtx && bgmSourceRef.current) {
+        setIsStandby(false);
+        setIsStarting(true);
+        const startTime = audioCtx.currentTime + 1.0;
+        bgmSourceRef.current.start(startTime);
+        startTimeRef.current = startTime;
+        isPlayingRef.current = true;
+        setTimeout(() => {
+          setIsStarting(false);
+        }, 1000);
+      }
+      return;
+    }
+
+    if (!isPlayingRef.current || isPaused || countdown !== null || isStarting) return;
 
     const elapsedTime = getGameTime();
     const laneNotes = notesRef.current.filter(n => n.lane === lane && !n.miss);
@@ -383,7 +459,7 @@ function GamePlayScreen({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [noteSpeed, song, isPaused, countdown]);
+  }, [noteSpeed, song, isPaused, countdown, isStandby, isStarting]);
 
   // Pause BGM and stop game updates
   const handlePause = () => {
@@ -444,9 +520,19 @@ function GamePlayScreen({
     setCountdown(null);
 
     // 4. Regenerate chart
-    notesRef.current = generateBeatmap(bgmBuffer.duration, song.bpm);
+    notesRef.current = initializeNotes();
     particlesRef.current = [];
     accumulatedPlayTimeRef.current = 0;
+
+    let maxTime = 0;
+    if (notesRef.current.length > 0) {
+      notesRef.current.forEach(n => {
+        const endTime = n.time + (n.duration || 0);
+        if (endTime > maxTime) maxTime = endTime;
+      });
+    }
+    chartEndTimeRef.current = maxTime > 0 ? maxTime : bgmBuffer.duration - 2.0;
+    isEndingRef.current = false;
 
     // 5. Fire new BGM source
     const source = audioCtx.createBufferSource();
@@ -454,10 +540,9 @@ function GamePlayScreen({
     source.connect(bgmGainNodeRef.current);
     bgmSourceRef.current = source;
 
-    startTimeRef.current = audioCtx.currentTime;
+    setIsStandby(true);
+    setIsStarting(false);
     isPlayingRef.current = true;
-
-    source.start(0);
     
     // Restart animation frame loop cleanly!
     animationFrameId.current = requestAnimationFrame(updateGameFrame);
@@ -493,6 +578,65 @@ function GamePlayScreen({
     const width = canvasSize.width;
     const height = canvasSize.height;
 
+    const vanishingPointX = width / 2;
+    const y_top = height * 0.15;
+    const y_bottom = height - 15;
+    const laneWidthBottom = width * 0.78;
+
+    // Render static standby board if waiting for user to start
+    if (isStandby) {
+      ctx.clearRect(0, 0, width, height);
+      
+      // Draw background lanes
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = 'rgba(6, 6, 12, 0.75)';
+      ctx.beginPath();
+      ctx.moveTo(vanishingPointX - 10, y_top);
+      ctx.lineTo(vanishingPointX + 10, y_top);
+      ctx.lineTo(vanishingPointX + laneWidthBottom/2, y_bottom);
+      ctx.lineTo(vanishingPointX - laneWidthBottom/2, y_bottom);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 8;
+      ctx.lineWidth = 2;
+      for (let i = 0; i <= 4; i++) {
+        const x_bottom_line = vanishingPointX + (i - 2) * (laneWidthBottom / 4);
+        ctx.strokeStyle = `rgba(0, 255, 255, ${i === 0 || i === 4 ? 0.75 : 0.25})`;
+        ctx.shadowColor = '#00ffff';
+        ctx.beginPath();
+        ctx.moveTo(vanishingPointX, y_top);
+        ctx.lineTo(x_bottom_line, y_bottom + 10);
+        ctx.stroke();
+      }
+
+      ctx.save();
+      ctx.shadowBlur = 18;
+      ctx.shadowColor = '#ff007f';
+      ctx.strokeStyle = '#ff007f';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(vanishingPointX - laneWidthBottom/2, y_bottom);
+      ctx.lineTo(vanishingPointX + laneWidthBottom/2, y_bottom);
+      ctx.stroke();
+      ctx.restore();
+
+      // Flash instruction message
+      ctx.save();
+      ctx.font = "bold 1.25rem monospace";
+      ctx.fillStyle = "rgba(0, 255, 255, " + (0.55 + Math.sin(Date.now() / 120) * 0.4) + ")";
+      ctx.textAlign = "center";
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = "#00ffff";
+      ctx.fillText("PRESS ANY KEY TO START", vanishingPointX, height * 0.5);
+      ctx.restore();
+
+      animationFrameId.current = requestAnimationFrame(() => {
+        if (updateGameFrameRef.current) updateGameFrameRef.current();
+      });
+      return;
+    }
+
     // If paused or counting down, draw current frame statically (do not update notes)
     if (audioCtx.state === 'suspended' || countdown !== null) {
       animationFrameId.current = requestAnimationFrame(() => {
@@ -504,16 +648,26 @@ function GamePlayScreen({
     ctx.clearRect(0, 0, width, height);
     const elapsedTime = getGameTime();
     
+    // Song fadeout trigger when reaching chart end
+    if (elapsedTime >= chartEndTimeRef.current) {
+      if (!isEndingRef.current) {
+        isEndingRef.current = true;
+        if (bgmGainNodeRef.current && audioCtx) {
+          bgmGainNodeRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+        }
+        setTimeout(() => {
+          isPlayingRef.current = false;
+          onGameOver(scoreRef.current, maxComboRef.current);
+        }, 2000);
+      }
+    }
+
     if (bgmBuffer && elapsedTime >= bgmBuffer.duration) {
       isPlayingRef.current = false;
       onGameOver(score, maxCombo);
       return;
     }
 
-    const vanishingPointX = width / 2;
-    const y_top = height * 0.15;
-    const y_bottom = height - 15;
-    const laneWidthBottom = width * 0.78;
     const visualDuration = 5.0 / noteSpeed;
 
     // 1. Lane background

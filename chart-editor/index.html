@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KLIKY-BEAT 채보 에디터 (Chart Editor)</title>
+  <style>
+    :root {
+      --bg-dark: #07080f;
+      --bg-panel: #111322;
+      --border-neon: rgba(0, 255, 255, 0.3);
+      --neon-cyan: #00ffff;
+      --neon-magenta: #ff007f;
+      --neon-yellow: #ffff00;
+      --neon-green: #39ff14;
+      --text-gray: #8f93a7;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-dark);
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Controls */
+    .sidebar {
+      width: 320px;
+      background-color: var(--bg-panel);
+      border-right: 2px solid var(--border-neon);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+    }
+
+    h2 {
+      margin: 0 0 5px 0;
+      font-family: monospace;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .control-group {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--text-gray);
+    }
+
+    select, input[type="number"], input[type="range"] {
+      background: #191b2c;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #fff;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      outline: none;
+      width: 90px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      padding: 0;
+      accent-color: var(--neon-cyan);
+    }
+
+    .button-group-row {
+      display: flex;
+      gap: 8px;
+    }
+    .button-group-row button {
+      flex: 1;
+    }
+
+    button {
+      background: transparent;
+      border: 1px solid var(--neon-cyan);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: monospace;
+      text-shadow: 0 0 5px var(--neon-cyan);
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.1);
+    }
+
+    button:hover {
+      background: var(--neon-cyan);
+      color: #000;
+      box-shadow: 0 0 15px var(--neon-cyan);
+      text-shadow: none;
+    }
+
+    button.secondary {
+      border-color: var(--neon-magenta);
+      text-shadow: 0 0 5px var(--neon-magenta);
+    }
+    button.secondary:hover {
+      background: var(--neon-magenta);
+      color: #fff;
+      box-shadow: 0 0 15px var(--neon-magenta);
+    }
+
+    /* Editor Grid area */
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Top Status HUD */
+    .status-hud {
+      height: 70px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background-color: rgba(17, 19, 34, 0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      box-sizing: border-box;
+    }
+
+    .time-readout {
+      font-family: monospace;
+      font-size: 1.1rem;
+      color: #fff;
+      display: flex;
+      gap: 20px;
+    }
+    .time-readout span {
+      color: var(--neon-cyan);
+    }
+
+    .guide-status {
+      font-size: 0.8rem;
+      color: var(--neon-yellow);
+      font-weight: bold;
+      text-shadow: 0 0 8px rgba(255, 255, 0, 0.3);
+    }
+
+    /* Main visual grid container */
+    .timeline-viewport {
+      flex: 1;
+      overflow-y: auto;
+      position: relative;
+      background: linear-gradient(180deg, #07080f 0%, #030407 100%);
+      display: flex;
+      justify-content: center;
+    }
+
+    /* Beat ruler label column on the left */
+    .ruler-container {
+      position: absolute;
+      left: 10px;
+      top: 0;
+      width: 60px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .ruler-label {
+      position: absolute;
+      left: 0;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-50%);
+    }
+
+    .timeline-grid {
+      width: 280px; /* 4 columns of exactly 70px */
+      position: relative;
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
+      border-right: 2px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    /* Grid Row lines representing subdivisions (Tighter row height) */
+    .grid-row {
+      height: 20px; /* height of 1 subdivision (Tighter for ease of viewing) */
+      width: 100%;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+      position: absolute;
+      left: 0;
+      box-sizing: border-box;
+      display: flex;
+    }
+
+    .grid-row.beat-line {
+      border-bottom: 1.5px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .grid-row.bar-line {
+      border-bottom: 2px solid rgba(0, 255, 255, 0.35);
+    }
+
+    /* Columns for lanes D, F, J, K */
+    .lane-col {
+      width: 70px; /* Exact 70px size */
+      height: 100%;
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      box-sizing: border-box;
+      position: relative;
+      cursor: crosshair;
+    }
+    .lane-col:last-child {
+      border-right: none;
+    }
+
+    .lane-col:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Target pending hold note head */
+    .lane-col.hold-pending-head::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: var(--neon-magenta);
+      box-shadow: 0 0 10px var(--neon-magenta);
+      transform: translate(-50%, -50%);
+      animation: blink 0.8s infinite alternate;
+    }
+
+    @keyframes blink {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* Current playback time indicator bar */
+    .playhead-marker {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background-color: var(--neon-magenta);
+      box-shadow: 0 0 10px var(--neon-magenta);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    /* Placed Notes (Hardcoded 48px width centered inside 70px column) */
+    .note-block {
+      position: absolute;
+      width: 48px;       /* Hardcoded width in pixels! */
+      height: 8px;       
+      border-radius: 4px;
+      transform: translateY(-50%);
+      z-index: 5;
+      cursor: pointer;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .note-block.lane-0 { background-color: var(--neon-cyan); color: var(--neon-cyan); }
+    .note-block.lane-1 { background-color: var(--neon-magenta); color: var(--neon-magenta); }
+    .note-block.lane-2 { background-color: var(--neon-yellow); color: var(--neon-yellow); }
+    .note-block.lane-3 { background-color: var(--neon-green); color: var(--neon-green); }
+
+    /* Hold Note Connecting Ribbon (Hardcoded 8px width centered at 35px column center) */
+    .hold-ribbon {
+      position: absolute;
+      width: 8px;        /* Hardcoded ribbon width in pixels! */
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0.45;
+    }
+    .hold-ribbon.lane-0 { background: linear-gradient(180deg, var(--neon-cyan), transparent); }
+    .hold-ribbon.lane-1 { background: linear-gradient(180deg, var(--neon-magenta), transparent); }
+    .hold-ribbon.lane-2 { background: linear-gradient(180deg, var(--neon-yellow), transparent); }
+    .hold-ribbon.lane-3 { background: linear-gradient(180deg, var(--neon-green), transparent); }
+
+    /* Textarea for JSON Output */
+    .export-area {
+      flex: 1;
+      background: #0a0b12;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      color: #00ff66;
+      font-family: monospace;
+      font-size: 0.72rem;
+      padding: 10px;
+      resize: none;
+      outline: none;
+      min-height: 120px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <h2>KLIKY-BEAT</h2>
+    <div class="section-title">CHART EDITOR</div>
+
+    <!-- Song Controls -->
+    <div class="control-group">
+      <div class="section-title">BGM CONTROLS</div>
+      <div class="button-group-row">
+        <button id="play-btn" style="flex: 2;">PLAY BGM</button>
+        <button id="stop-btn" class="secondary">STOP</button>
+      </div>
+
+      <!-- Scrubbing seek slider -->
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="control-row">
+          <label>SEEK PROGRESS:</label>
+          <span id="track-time" style="font-family: monospace; font-size: 0.75rem; color: var(--neon-cyan);">00:00 / 00:00</span>
+        </div>
+        <input type="range" id="seek-slider" min="0" max="100" step="0.1" value="0">
+      </div>
+      
+      <div class="control-row">
+        <label>PLAYBACK SPEED:</label>
+        <select id="playback-speed">
+          <option value="1.0">1.0x (Normal)</option>
+          <option value="0.75">0.75x</option>
+          <option value="0.5">0.5x</option>
+        </select>
+      </div>
+      
+      <div class="control-row" style="flex-direction: column; gap: 4px; align-items: flex-start;">
+        <label>VOLUME:</label>
+        <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="0.7">
+      </div>
+    </div>
+
+    <!-- Snap settings -->
+    <div class="control-group">
+      <div class="section-title">GRID SETTINGS</div>
+      <div class="control-row">
+        <label>BPM:</label>
+        <input type="number" id="bpm-val" value="140" min="60" max="300">
+      </div>
+      <div class="control-row">
+        <label>BEAT SNAP:</label>
+        <select id="beat-snap">
+          <option value="4">1/4 Beat (16th)</option>
+          <option value="8">1/8 Beat (32nd)</option>
+          <option value="2">1/2 Beat (8th)</option>
+          <option value="1">1 Beat (Quarter)</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label>MODE:</label>
+        <select id="note-mode">
+          <option value="short">TAP NOTE (단타)</option>
+          <option value="hold">HOLD NOTE (장타)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Export/Import -->
+    <div class="control-group" style="flex: 1; display: flex; flex-direction: column; min-height: 220px;">
+      <div class="section-title">EXPORT / IMPORT CHART</div>
+      <button id="export-btn">GENERATE JSON</button>
+      <textarea id="json-io" class="export-area" placeholder="JSON output will appear here..."></textarea>
+      <button id="copy-btn" class="secondary" style="margin-top: 8px;">COPY TO CLIPBOARD</button>
+    </div>
+  </div>
+
+  <!-- MAIN VIEWPORT -->
+  <div class="editor-container">
+    
+    <!-- Hud info -->
+    <header class="status-hud">
+      <div class="time-readout">
+        <div>TIME: <span id="time-display">00:00.00</span></div>
+        <div>BEAT: <span id="beat-display">0.00</span></div>
+      </div>
+      <!-- HUD Interactive Status Guideline (Replaces alert popups) -->
+      <div id="editor-guide" class="guide-status">
+        MODE: TAP NOTE (Click grid cell to place notes)
+      </div>
+    </header>
+
+    <!-- VIEWPORT GRID -->
+    <div class="timeline-viewport" id="viewport">
+      <!-- Ruler labels for beat counts -->
+      <div class="ruler-container" id="ruler"></div>
+      
+      <div class="timeline-grid" id="grid">
+        <!-- Playhead Indicator -->
+        <div class="playhead-marker" id="playhead"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Audio Element -->
+  <audio id="bgm" src="/my_heart.mp3"></audio>
+
+  <script>
+    // State Variables
+    let bpm = 140;
+    let beatSnap = 4; // 1/4 divisions
+    let noteMode = 'short'; // 'short' or 'hold'
+    let holdStartCell = null; // Stores { beat, lane } when clicking first hold cap
+
+    // Height parameters (Reduced from 35 to 20 for tighter compact grid)
+    const subdivisionHeight = 20; 
+    
+    // Notes storage
+    let notesList = [];
+
+    // DOM Elements
+    const bgm = document.getElementById('bgm');
+    const playBtn = document.getElementById('play-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const seekSlider = document.getElementById('seek-slider');
+    const trackTime = document.getElementById('track-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const playbackSpeedSelect = document.getElementById('playback-speed');
+    const bpmVal = document.getElementById('bpm-val');
+    const beatSnapSelect = document.getElementById('beat-snap');
+    const noteModeSelect = document.getElementById('note-mode');
+    const exportBtn = document.getElementById('export-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const jsonIO = document.getElementById('json-io');
+    const timeDisplay = document.getElementById('time-display');
+    const beatDisplay = document.getElementById('beat-display');
+    const editorGuide = document.getElementById('editor-guide');
+    const viewport = document.getElementById('viewport');
+    const grid = document.getElementById('grid');
+    const ruler = document.getElementById('ruler');
+    const playhead = document.getElementById('playhead');
+
+    // Init UI settings
+    bgm.volume = volumeSlider.value;
+    bpm = parseInt(bpmVal.value);
+
+    // Audio Playback Listeners
+    playBtn.addEventListener('click', () => {
+      if (bgm.paused) {
+        bgm.play();
+        playBtn.innerText = 'PAUSE BGM';
+      } else {
+        bgm.pause();
+        playBtn.innerText = 'PLAY BGM';
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      bgm.pause();
+      bgm.currentTime = 0;
+      playBtn.innerText = 'PLAY BGM';
+      syncPlayhead();
+    });
+
+    // Seek scrubber scrubbing
+    seekSlider.addEventListener('input', (e) => {
+      if (bgm.duration) {
+        const targetTime = (e.target.value / 100) * bgm.duration;
+        bgm.currentTime = targetTime;
+        syncPlayhead();
+      }
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+      bgm.volume = e.target.value;
+    });
+
+    playbackSpeedSelect.addEventListener('change', (e) => {
+      bgm.playbackRate = parseFloat(e.target.value);
+    });
+
+    bpmVal.addEventListener('change', (e) => {
+      bpm = parseInt(e.target.value) || 120;
+      rebuildGrid();
+    });
+
+    beatSnapSelect.addEventListener('change', (e) => {
+      beatSnap = parseInt(e.target.value);
+      rebuildGrid();
+    });
+
+    noteModeSelect.addEventListener('change', (e) => {
+      noteMode = e.target.value;
+      holdStartCell = null;
+      updateGuideText();
+      rebuildGrid();
+    });
+
+    // Arrow keys timeline navigation seeking listener
+    window.addEventListener('keydown', (e) => {
+      // Ignore arrow seeking if focus is inside input or textarea
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (bgm.duration) {
+          const seekAmtBeats = e.shiftKey ? 1.0 : (1.0 / beatSnap);
+          const seekSeconds = seekAmtBeats * (60 / bpm);
+          bgm.currentTime = Math.max(0, bgm.currentTime - seekSeconds);
+          syncPlayhead();
+        }
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (bgm.duration) {
+          const seekAmtBeats = e.shiftKey ? 1.0 : (1.0 / beatSnap);
+          const seekSeconds = seekAmtBeats * (60 / bpm);
+          bgm.currentTime = Math.min(bgm.duration, bgm.currentTime + seekSeconds);
+          syncPlayhead();
+        }
+      }
+    });
+
+    function updateGuideText() {
+      if (noteMode === 'short') {
+        editorGuide.className = "guide-status";
+        editorGuide.style.color = "var(--neon-cyan)";
+        editorGuide.innerText = "MODE: TAP NOTE (Click cell to place notes)";
+      } else {
+        editorGuide.className = "guide-status";
+        editorGuide.style.color = "var(--neon-magenta)";
+        if (holdStartCell === null) {
+          editorGuide.innerText = "MODE: HOLD NOTE (Click cell to set START point)";
+        } else {
+          editorGuide.innerText = `HOLD START: Beat ${holdStartCell.beat.toFixed(2)} (Click end cell in Lane ${holdStartCell.lane + 1})`;
+        }
+      }
+    }
+
+    // Rebuild visual timeline grid
+    function rebuildGrid() {
+      const duration = bgm.duration || 120;
+      const totalBeats = Math.ceil(duration * (bpm / 60)) + 8; // Extra padding
+      const totalSubdivisions = totalBeats * beatSnap;
+      
+      const gridHeight = totalSubdivisions * subdivisionHeight;
+      grid.style.height = gridHeight + 'px';
+      ruler.style.height = gridHeight + 'px';
+
+      // Rebuild ruler labels on the left margin
+      ruler.innerHTML = '';
+      for (let b = 0; b < totalBeats; b += 4) {
+        const label = document.createElement('div');
+        label.className = 'ruler-label';
+        label.innerText = `B ${b}`;
+        label.style.top = (b * beatSnap * subdivisionHeight) + 'px';
+        ruler.appendChild(label);
+      }
+
+      // Clear existing grid lines
+      const rows = grid.querySelectorAll('.grid-row');
+      rows.forEach(r => r.remove());
+
+      // Render grid rows (drawn from top = beat 0 downwards)
+      for (let s = 0; s < totalSubdivisions; s++) {
+        const beatTime = s / beatSnap;
+        const isBar = beatTime % 4 === 0;
+        const isBeat = beatTime % 1 === 0;
+
+        const row = document.createElement('div');
+        row.className = 'grid-row';
+        if (isBar) row.classList.add('bar-line');
+        else if (isBeat) row.classList.add('beat-line');
+
+        row.style.top = (s * subdivisionHeight) + 'px';
+
+        for (let l = 0; l < 4; l++) {
+          const cell = document.createElement('div');
+          cell.className = 'lane-col';
+          cell.dataset.beat = beatTime;
+          cell.dataset.lane = l;
+
+          // If a hold note is currently pending, highlight the start cell!
+          if (holdStartCell && holdStartCell.lane === l && Math.abs(holdStartCell.beat - beatTime) < 0.001) {
+            cell.classList.add('hold-pending-head');
+          }
+
+          cell.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            handleGridCellClick(beatTime, l);
+          });
+
+          row.appendChild(cell);
+        }
+
+        grid.appendChild(row);
+      }
+
+      redrawNotes();
+    }
+
+    // Move playheads based on current BGM time
+    function syncPlayhead() {
+      if (bgm.duration) {
+        const elapsed = bgm.currentTime;
+        const currentBeat = elapsed * (bpm / 60);
+        const yPlayhead = currentBeat * beatSnap * subdivisionHeight;
+
+        playhead.style.top = yPlayhead + 'px';
+
+        // Auto center viewport scroll on playhead
+        const viewportCenter = viewport.clientHeight / 2;
+        viewport.scrollTop = yPlayhead - viewportCenter;
+
+        // Scrub slider value sync
+        seekSlider.value = (elapsed / bgm.duration) * 100;
+
+        // Text labels sync
+        const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(elapsed % 60).toString().padStart(2, '0');
+        const totalMin = Math.floor(bgm.duration / 60).toString().padStart(2, '0');
+        const totalSec = Math.floor(bgm.duration % 60).toString().padStart(2, '0');
+        
+        trackTime.innerText = `${minutes}:${seconds} / ${totalMin}:${totalSec}`;
+        
+        const ms = Math.floor((elapsed % 1) * 100).toString().padStart(2, '0');
+        timeDisplay.innerText = `${minutes}:${seconds}.${ms}`;
+        beatDisplay.innerText = currentBeat.toFixed(2);
+      }
+    }
+
+    bgm.addEventListener('loadedmetadata', () => {
+      rebuildGrid();
+      syncPlayhead();
+    });
+
+    bgm.addEventListener('timeupdate', () => {
+      syncPlayhead();
+    });
+
+    // Handle Note Placement
+    function handleGridCellClick(beat, lane) {
+      const matchIdx = notesList.findIndex(n => Math.abs(n.beat - beat) < 0.001 && n.lane === lane);
+      if (matchIdx !== -1) {
+        notesList.splice(matchIdx, 1);
+        holdStartCell = null;
+        updateGuideText();
+        redrawNotes();
+        playFeedbackSound();
+        return;
+      }
+
+      if (noteMode === 'short') {
+        notesList.push({
+          beat: beat,
+          lane: lane,
+          type: 'short'
+        });
+        playFeedbackSound();
+      } else {
+        if (holdStartCell === null) {
+          holdStartCell = { beat, lane };
+          updateGuideText();
+          rebuildGrid(); 
+          playFeedbackSound();
+        } else {
+          if (holdStartCell.lane !== lane) {
+            holdStartCell = null;
+            updateGuideText();
+            rebuildGrid();
+            return;
+          }
+          if (beat <= holdStartCell.beat) {
+            holdStartCell = null;
+            updateGuideText();
+            rebuildGrid();
+            return;
+          }
+
+          notesList.push({
+            beat: holdStartCell.beat,
+            lane: lane,
+            type: 'hold',
+            durationBeats: beat - holdStartCell.beat
+          });
+          holdStartCell = null;
+          updateGuideText();
+          rebuildGrid();
+          playFeedbackSound();
+        }
+      }
+
+      redrawNotes();
+    }
+
+    function playFeedbackSound() {
+      const audio = new Audio('/key1.mp3');
+      audio.volume = 0.5;
+      audio.play();
+    }
+
+    // Render placed notes with pixel-perfect hardcoded sizes and alignments
+    function redrawNotes() {
+      const existing = grid.querySelectorAll('.note-block, .hold-ribbon');
+      existing.forEach(e => e.remove());
+
+      notesList.forEach(note => {
+        const topY = note.beat * beatSnap * subdivisionHeight;
+
+        // Lane width is exactly 70px.
+        // For a 48px wide note block: center position = lane * 70px + (70 - 48)/2 = lane * 70px + 11px.
+        const noteWidth = 48;
+        const noteLeft = note.lane * 70 + 11;
+
+        if (note.type === 'hold' && note.durationBeats) {
+          const heightPx = note.durationBeats * beatSnap * subdivisionHeight;
+          const ribbon = document.createElement('div');
+          ribbon.className = `hold-ribbon lane-${note.lane}`;
+          ribbon.style.top = topY + 'px';
+          ribbon.style.height = heightPx + 'px';
+          
+          // Center the 8px wide hold ribbon: lane * 70px + (70 - 8)/2 = lane * 70px + 31px.
+          ribbon.style.left = (note.lane * 70 + 31) + 'px';
+          grid.appendChild(ribbon);
+
+          // End cap block
+          const endNoteBlock = document.createElement('div');
+          endNoteBlock.className = `note-block lane-${note.lane}`;
+          endNoteBlock.style.top = (topY + heightPx) + 'px';
+          endNoteBlock.style.left = noteLeft + 'px';
+          endNoteBlock.style.border = '1.5px dashed #ffffff';
+          grid.appendChild(endNoteBlock);
+        }
+
+        const noteBlock = document.createElement('div');
+        noteBlock.className = `note-block lane-${note.lane}`;
+        noteBlock.style.top = topY + 'px';
+        noteBlock.style.left = noteLeft + 'px';
+        if (note.type === 'hold') {
+          noteBlock.style.border = '1.5px solid #ffffff';
+        }
+
+        noteBlock.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = notesList.indexOf(note);
+          if (idx !== -1) {
+            notesList.splice(idx, 1);
+            redrawNotes();
+          }
+        });
+
+        grid.appendChild(noteBlock);
+      });
+    }
+
+    // Export notes to clipboard JSON format
+    exportBtn.addEventListener('click', () => {
+      notesList.sort((a, b) => a.beat - b.beat);
+
+      const formatted = notesList.map(n => {
+        if (n.type === 'hold') {
+          return `  { beat: ${n.beat.toFixed(2)}, lane: ${n.lane}, type: 'hold', durationBeats: ${n.durationBeats.toFixed(2)} }`;
+        }
+        return `  { beat: ${n.beat.toFixed(2)}, lane: ${n.lane}, type: 'short' }`;
+      });
+
+      const outputString = `[\n${formatted.join(',\n')}\n]`;
+      jsonIO.value = outputString;
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (!jsonIO.value) {
+        alert('Please generate JSON first!');
+        return;
+      }
+      navigator.clipboard.writeText(jsonIO.value)
+        .then(() => alert('Successfully copied chart array to clipboard! You can now paste it into SONGS in App.jsx.'))
+        .catch(err => alert('Failed to copy text: ' + err));
+    });
+
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        rebuildGrid();
+        syncPlayhead();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

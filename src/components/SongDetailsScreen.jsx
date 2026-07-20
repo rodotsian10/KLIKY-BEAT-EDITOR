@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './SongDetailsScreen.css';
 
 function SongDetailsScreen({ 
@@ -9,6 +9,36 @@ function SongDetailsScreen({
   onPlay,
   playKeycapSound
 }) {
+  const [customChartText, setCustomChartText] = useState('');
+
+  const handlePlayCustomChart = () => {
+    if (!customChartText.trim()) {
+      alert('채보 JSON 데이터를 입력해 주세요!');
+      return;
+    }
+
+    try {
+      // Evaluate pasted javascript array directly (handles unquoted keys & single quotes)
+      const evaluator = new Function(`return ${customChartText}`);
+      const parsedChart = evaluator();
+      
+      if (!Array.isArray(parsedChart)) {
+        throw new Error('데이터가 배열 형식이 아닙니다.');
+      }
+
+      // Inject custom chart into copy of selected song
+      const tempSong = {
+        ...song,
+        chart: parsedChart
+      };
+
+      if (playKeycapSound) playKeycapSound();
+      onPlay(tempSong);
+    } catch (e) {
+      alert(`채보 파싱 실패: ${e.message}\n에디터에서 복사한 배열이 맞는지 확인해 주세요.`);
+    }
+  };
+
   return (
     <div className="song-details-screen">
       <header className="details-header">
@@ -71,6 +101,70 @@ function SongDetailsScreen({
       >
         PLAY NOW
       </button>
+
+      {/* ========================================================================= */}
+      {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST FIELD (REMOVE THIS WHOLE BLOCK FOR PROD) */}
+      {/* ========================================================================= */}
+      <div style={{
+        marginTop: '20px',
+        width: '100%',
+        maxWidth: '280px',
+        margin: '20px auto 0 auto',
+        padding: '12px',
+        background: 'rgba(255, 0, 127, 0.05)',
+        border: '1px dashed var(--neon-magenta)',
+        borderRadius: '12px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+      }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--neon-magenta)', fontWeight: 'bold', textAlign: 'center', letterSpacing: '1px' }}>
+          🛠️ DEBUG: CUSTOM CHART TEST
+        </div>
+        <textarea
+          value={customChartText}
+          onChange={(e) => setCustomChartText(e.target.value)}
+          placeholder="여기에 에디터에서 복사한 채보 JSON 배열을 붙여넣으세요..."
+          style={{
+            width: '100%',
+            height: '70px',
+            background: 'rgba(0, 0, 0, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '6px',
+            color: '#00ff66',
+            fontFamily: 'monospace',
+            fontSize: '0.65rem',
+            padding: '6px',
+            boxSizing: 'border-box',
+            resize: 'none',
+            outline: 'none'
+          }}
+        />
+        <button
+          onClick={handlePlayCustomChart}
+          style={{
+            width: '100%',
+            background: 'transparent',
+            border: '1px solid var(--neon-magenta)',
+            borderRadius: '6px',
+            color: '#fff',
+            fontSize: '0.8rem',
+            padding: '6px 0',
+            cursor: 'pointer',
+            fontFamily: 'monospace',
+            textShadow: '0 0 5px var(--neon-magenta-glow)',
+            boxShadow: '0 0 8px rgba(255, 0, 127, 0.1)'
+          }}
+          onMouseEnter={(e) => { e.target.style.background = 'var(--neon-magenta)'; e.target.style.color = '#fff'; }}
+          onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#fff'; }}
+        >
+          PLAY CUSTOM CHART
+        </button>
+      </div>
+      {/* ========================================================================= */}
+      {/* ⚠️ DEBUG ONLY END */}
+      {/* ========================================================================= */}
     </div>
   );
 }
