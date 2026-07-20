@@ -18,7 +18,6 @@ function SongDetailsScreen({
     }
 
     try {
-      // Evaluate pasted javascript array directly (handles unquoted keys & single quotes)
       const evaluator = new Function(`return ${customChartText}`);
       const parsedChart = evaluator();
       
@@ -26,12 +25,7 @@ function SongDetailsScreen({
         throw new Error('데이터가 배열 형식이 아닙니다.');
       }
 
-      // Inject custom chart into copy of selected song
-      const tempSong = {
-        ...song,
-        chart: parsedChart
-      };
-
+      const tempSong = { ...song, chart: parsedChart };
       if (playKeycapSound) playKeycapSound();
       onPlay(tempSong);
     } catch (e) {
@@ -50,35 +44,40 @@ function SongDetailsScreen({
         </button>
       </header>
 
-      <div className="details-body">
-        <div className="vinyl-record-container">
-          <div className="vinyl-disc playing">
-            <div className="vinyl-center-art"></div>
-          </div>
-        </div>
-        
-        <h2 className="details-title-txt">{song.title}</h2>
-        <p className="details-artist-txt">{song.artist}</p>
-
-        <div className="details-info-row">
-          <div className="details-badge">
-            <span>SPEED</span>
-            <span className="details-badge-val">{noteSpeed.toFixed(1)}x</span>
-          </div>
-          <div className="details-badge">
-            <span>BPM</span>
-            <span className="details-badge-val">{song.bpm}</span>
-          </div>
-          <div className="details-badge">
-            <span>DIFF</span>
-            <span className="details-badge-val" style={{ color: song.difficulty === 'HARD' ? 'var(--neon-magenta)' : 'var(--neon-green)' }}>
-              {song.difficulty}
-            </span>
+      {/* Landscape: left column = vinyl, right column = info+buttons */}
+      <div className="details-layout">
+        {/* Left: Vinyl */}
+        <div className="details-left">
+          <div className="vinyl-record-container">
+            <div className="vinyl-disc playing">
+              <div className="vinyl-center-art"></div>
+            </div>
           </div>
         </div>
 
-        <div className="settings-group" style={{ width: '100%' }}>
-          <div className="setting-row">
+        {/* Right: Info + Controls */}
+        <div className="details-right">
+          <h2 className="details-title-txt">{song.title}</h2>
+          <p className="details-artist-txt">{song.artist}</p>
+
+          <div className="details-info-row">
+            <div className="details-badge">
+              <span>SPEED</span>
+              <span className="details-badge-val">{noteSpeed.toFixed(1)}x</span>
+            </div>
+            <div className="details-badge">
+              <span>BPM</span>
+              <span className="details-badge-val">{song.bpm}</span>
+            </div>
+            <div className="details-badge">
+              <span>DIFF</span>
+              <span className="details-badge-val" style={{ color: song.difficulty === 'HARD' ? 'var(--neon-magenta)' : 'var(--neon-green)' }}>
+                {song.difficulty}
+              </span>
+            </div>
+          </div>
+
+          <div className="details-speed-row">
             <span className="setting-label">SPEED:</span>
             <input 
               type="range" 
@@ -87,84 +86,41 @@ function SongDetailsScreen({
               step="0.5" 
               value={noteSpeed} 
               onChange={(e) => setNoteSpeed(parseFloat(e.target.value))}
-              className="setting-slider"
+              className="setting-slider details-slider"
             />
             <span className="setting-value">{noteSpeed.toFixed(1)}x</span>
           </div>
+
+          <button 
+            className="button-neon details-play-btn"
+            onClick={() => { if (playKeycapSound) playKeycapSound(); onPlay(song); }}
+          >
+            PLAY NOW
+          </button>
+
+          {/* ====================================================== */}
+          {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST (REMOVE FOR PROD) */}
+          {/* ====================================================== */}
+          <div className="details-debug-box">
+            <div className="details-debug-label">🛠️ DEBUG: CUSTOM CHART TEST</div>
+            <textarea
+              value={customChartText}
+              onChange={(e) => setCustomChartText(e.target.value)}
+              placeholder="에디터에서 복사한 채보 JSON 배열을 붙여넣으세요..."
+              className="details-debug-textarea"
+            />
+            <button
+              onClick={handlePlayCustomChart}
+              className="details-debug-btn"
+            >
+              PLAY CUSTOM CHART
+            </button>
+          </div>
+          {/* ====================================================== */}
+          {/* ⚠️ DEBUG ONLY END */}
+          {/* ====================================================== */}
         </div>
       </div>
-
-      <button 
-        className="button-neon" 
-        onClick={() => { if (playKeycapSound) playKeycapSound(); onPlay(song); }}
-        style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
-      >
-        PLAY NOW
-      </button>
-
-      {/* ========================================================================= */}
-      {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST FIELD (REMOVE THIS WHOLE BLOCK FOR PROD) */}
-      {/* ========================================================================= */}
-      <div style={{
-        marginTop: '20px',
-        width: '100%',
-        maxWidth: '280px',
-        margin: '20px auto 0 auto',
-        padding: '12px',
-        background: 'rgba(255, 0, 127, 0.05)',
-        border: '1px dashed var(--neon-magenta)',
-        borderRadius: '12px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '10px'
-      }}>
-        <div style={{ fontSize: '0.75rem', color: 'var(--neon-magenta)', fontWeight: 'bold', textAlign: 'center', letterSpacing: '1px' }}>
-          🛠️ DEBUG: CUSTOM CHART TEST
-        </div>
-        <textarea
-          value={customChartText}
-          onChange={(e) => setCustomChartText(e.target.value)}
-          placeholder="여기에 에디터에서 복사한 채보 JSON 배열을 붙여넣으세요..."
-          style={{
-            width: '100%',
-            height: '70px',
-            background: 'rgba(0, 0, 0, 0.4)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '6px',
-            color: '#00ff66',
-            fontFamily: 'monospace',
-            fontSize: '0.65rem',
-            padding: '6px',
-            boxSizing: 'border-box',
-            resize: 'none',
-            outline: 'none'
-          }}
-        />
-        <button
-          onClick={handlePlayCustomChart}
-          style={{
-            width: '100%',
-            background: 'transparent',
-            border: '1px solid var(--neon-magenta)',
-            borderRadius: '6px',
-            color: '#fff',
-            fontSize: '0.8rem',
-            padding: '6px 0',
-            cursor: 'pointer',
-            fontFamily: 'monospace',
-            textShadow: '0 0 5px var(--neon-magenta-glow)',
-            boxShadow: '0 0 8px rgba(255, 0, 127, 0.1)'
-          }}
-          onMouseEnter={(e) => { e.target.style.background = 'var(--neon-magenta)'; e.target.style.color = '#fff'; }}
-          onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#fff'; }}
-        >
-          PLAY CUSTOM CHART
-        </button>
-      </div>
-      {/* ========================================================================= */}
-      {/* ⚠️ DEBUG ONLY END */}
-      {/* ========================================================================= */}
     </div>
   );
 }

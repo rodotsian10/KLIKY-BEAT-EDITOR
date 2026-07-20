@@ -13,8 +13,10 @@
 }
 
 .settings-modal {
-  width: 85%;
-  max-width: 360px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, #121320 0%, #080911 100%);
   border: 1px solid rgba(0, 255, 255, 0.2);
   box-shadow: 0 0 30px var(--neon-cyan-glow);
@@ -23,6 +25,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 255, 0.3) transparent;
 }
 
 .settings-title {
@@ -36,9 +40,9 @@
 
 .settings-group {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
 }
 
 .setting-row {
@@ -49,18 +53,22 @@
 }
 
 .setting-label {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
 .setting-value {
   font-family: var(--font-mono);
   font-weight: 700;
   color: var(--neon-cyan);
+  min-width: 36px;
+  text-align: right;
 }
 
 .setting-slider {
-  width: 150px;
+  flex: 1;
+  margin: 0 8px;
   accent-color: var(--neon-cyan);
 }
 
