@@ -484,9 +484,16 @@ function App() {
               audioCtxRef.current.suspend();
             }
           } else {
-            // App returned to foreground - resume AudioContext if it was suspended
-            if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-              audioCtxRef.current.resume();
+            // App returned to foreground - only resume if we are not currently paused or waiting to start!
+            // To be extremely clean, we only resume if the AudioContext was running or needed.
+            // If the user deliberately paused the game, do not auto-resume audio playback!
+            // We can read the visibility state safely.
+            const isPausedEl = document.querySelector('.overlay-screen .menu-title');
+            const isPausedState = isPausedEl && isPausedEl.textContent === 'PAUSED';
+            if (!isPausedState) {
+              if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                audioCtxRef.current.resume();
+              }
             }
           }
         });
@@ -499,8 +506,12 @@ function App() {
               audioCtxRef.current.suspend();
             }
           } else {
-            if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-              audioCtxRef.current.resume();
+            const isPausedEl = document.querySelector('.overlay-screen .menu-title');
+            const isPausedState = isPausedEl && isPausedEl.textContent === 'PAUSED';
+            if (!isPausedState) {
+              if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                audioCtxRef.current.resume();
+              }
             }
           }
         };

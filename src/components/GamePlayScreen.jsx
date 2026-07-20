@@ -307,15 +307,17 @@ function GamePlayScreen({
     const y_bottom = height - 15;
     
     const z_raw = timeDiff / visualDuration;
-    const Z = z_raw * 3.5 + 1.0;
+    const Z = z_raw * 3.5 + 1.0; 
     
     const R = 1.0 / (Z * Z);
     const y = y_top + (y_bottom - y_top) * R;
     
-    const laneWidthBottom = width * 0.78;
+    // Constant lane width relative to heights to ensure physical vertical spacing
+    const laneWidthBottom = Math.min(width * 0.78, height * 0.85);
     const currentLaneWidth = laneWidthBottom * R;
     
     const x = vanishingPointX + (lane - 1.5) * (currentLaneWidth / 4);
+    
     const sizeScale = R;
 
     return { x, y, sizeScale };
@@ -588,7 +590,7 @@ function GamePlayScreen({
     const vanishingPointX = width / 2;
     const y_top = height * 0.15;
     const y_bottom = height - 15;
-    const laneWidthBottom = width * 0.78;
+    const laneWidthBottom = Math.min(width * 0.78, height * 0.85);
 
     // Render static standby board if waiting for user to start
     if (isStandby) {
@@ -983,7 +985,7 @@ function GamePlayScreen({
         )}
       </main>
 
-      <section className="keyboard-area" style={{ width: `${canvasSize.width * 0.78}px` }}>
+      <section className="keyboard-area" style={{ width: `${Math.min(canvasSize.width * 0.78, canvasSize.height * 0.85)}px`, maxWidth: '100%', gap: '0px', padding: '0 0px 40px 0px' }}>
         {KEY_DETAILS.map((kd, idx) => (
           <Keycap
             key={kd.key}
