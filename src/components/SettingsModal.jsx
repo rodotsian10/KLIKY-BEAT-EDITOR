@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
 import './SettingsModal.css';
 
+const LANE_COLORS = ['cyan', 'magenta', 'yellow', 'green'];
+const LANE_NEONS = ['#00ffff', '#ff007f', '#ffff00', '#39ff14'];
+
 function SettingsModal({ 
   bgmVolume, 
   sfxVolume, 
   setBgmVolume, 
-  setSfxVolume, 
+  setSfxVolume,
+  keyLabels,
+  setKeyLabels,
   onClose,
   playKeycapSound 
 }) {
   const [showCopyright, setShowCopyright] = useState(false);
+
+  const handleLabelChange = (index, value) => {
+    // Allow max 2 characters
+    const trimmed = value.slice(0, 2).toUpperCase();
+    const next = [...keyLabels];
+    next[index] = trimmed;
+    setKeyLabels(next);
+  };
 
   return (
     <div className="settings-overlay" onClick={onClose}>
@@ -44,6 +57,40 @@ function SettingsModal({
             />
             <span className="setting-value">{Math.round(sfxVolume * 100)}%</span>
           </div>
+        </div>
+
+        {/* Key Label Customization */}
+        <div className="settings-group">
+          <p className="settings-section-title">⌨️ KEY LABELS</p>
+          <div className="key-label-row">
+            {keyLabels.map((label, i) => (
+              <div key={i} className="key-label-item">
+                <div
+                  className="key-label-preview"
+                  style={{
+                    borderColor: LANE_NEONS[i],
+                    boxShadow: `0 0 10px ${LANE_NEONS[i]}66`,
+                    color: LANE_NEONS[i],
+                  }}
+                >
+                  {label || '·'}
+                </div>
+                <input
+                  className="key-label-input"
+                  type="text"
+                  maxLength={2}
+                  value={label}
+                  onChange={(e) => handleLabelChange(i, e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  style={{ borderColor: LANE_NEONS[i] }}
+                />
+                <span className="key-label-hint" style={{ color: LANE_NEONS[i] }}>
+                  Lane {i + 1}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="key-label-desc">게임 화면 키캡에 표시될 글자를 변경합니다 (최대 2자)</p>
         </div>
 
         {/* Copyright Expandable Disclosure Section */}

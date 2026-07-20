@@ -441,6 +441,7 @@ function App() {
   const [noteSpeed, setNoteSpeed] = useState(4.0);
   const [bgmVolume, setBgmVolume] = useState(0.7);
   const [sfxVolume, setSfxVolume] = useState(0.8);
+  const [keyLabels, setKeyLabels] = useState(['D', 'F', 'J', 'K']);
   const [loadProgress, setLoadProgress] = useState(0);
 
   // Audio Cache Refs
@@ -606,6 +607,7 @@ function App() {
           sfxVolume={sfxVolume}
           bgmBuffer={bgmBufferRef.current}
           sfxBuffers={sfxBuffersRef.current}
+          keyLabels={keyLabels}
           onGameOver={(finalScore, finalMaxCombo) => {
             setScore(finalScore);
             setMaxCombo(finalMaxCombo);
@@ -656,6 +658,8 @@ function App() {
           sfxVolume={sfxVolume}
           setBgmVolume={setBgmVolume}
           setSfxVolume={setSfxVolume}
+          keyLabels={keyLabels}
+          setKeyLabels={setKeyLabels}
           onResetHighscores={handleResetHighscores}
           onClose={() => setShowSettings(false)}
           playKeycapSound={playKeycapSound}

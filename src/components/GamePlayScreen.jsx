@@ -9,11 +9,11 @@ const KEY_MAP = {
   'k': 3, 'K': 3
 };
 
-const KEY_DETAILS = [
-  { key: 'D', color: 'cyan', neon: '#00ffff', label: 'D' },
-  { key: 'F', color: 'magenta', neon: '#ff007f', label: 'F' },
-  { key: 'J', color: 'yellow', neon: '#ffff00', label: 'J' },
-  { key: 'K', color: 'green', neon: '#39ff14', label: 'K' }
+const KEY_DETAILS_BASE = [
+  { key: 'D', color: 'cyan', neon: '#00ffff' },
+  { key: 'F', color: 'magenta', neon: '#ff007f' },
+  { key: 'J', color: 'yellow', neon: '#ffff00' },
+  { key: 'K', color: 'green', neon: '#39ff14' }
 ];
 
 const BPM = 140;
@@ -27,9 +27,14 @@ function GamePlayScreen({
   sfxVolume, 
   bgmBuffer, 
   sfxBuffers, 
+  keyLabels,
   onGameOver,
   onQuit 
 }) {
+  const KEY_DETAILS = KEY_DETAILS_BASE.map((d, i) => ({
+    ...d,
+    label: (keyLabels && keyLabels[i]) ? keyLabels[i] : d.key
+  }));
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
