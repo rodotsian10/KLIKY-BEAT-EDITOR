@@ -2,10 +2,7 @@
   position: relative;
   width: 100vw;
   height: 100vh;
-  max-width: 480px; /* Locked to strict mobile aspect ratio on PC */
   background: #06060c;
-  border-left: 2px solid rgba(0, 255, 255, 0.15);
-  border-right: 2px solid rgba(0, 255, 255, 0.15);
   display: flex;
   flex-direction: column;
   align-items: center;

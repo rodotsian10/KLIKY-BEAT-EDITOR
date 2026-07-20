@@ -28,6 +28,7 @@ function GamePlayScreen({
   bgmBuffer, 
   sfxBuffers, 
   keyLabels,
+  playKeycapSound,
   onGameOver,
   onQuit 
 }) {
@@ -89,7 +90,8 @@ function GamePlayScreen({
       const resizeObserver = new ResizeObserver((entries) => {
         for (let entry of entries) {
           const { width, height } = entry.contentRect;
-          setCanvasSize({ width: Math.min(width, 480), height: height });
+          // In landscape, limit the canvas width dynamically to center the track
+          setCanvasSize({ width: Math.min(width, height * 1.3), height: height });
         }
       });
       resizeObserver.observe(containerRef.current);
@@ -258,7 +260,7 @@ function GamePlayScreen({
     return map.sort((a, b) => a.time - b.time);
   };
 
-  const playKeycapSound = () => {
+  const triggerKeycapAudio = () => {
     if (!audioCtx || sfxBuffers.length === 0) return;
     const randIdx = Math.floor(Math.random() * sfxBuffers.length);
     const buffer = sfxBuffers[randIdx];
@@ -320,7 +322,7 @@ function GamePlayScreen({
   };
 
   const handleKeyPress = (lane) => {
-    playKeycapSound();
+    triggerKeycapAudio();
     
     // Start BGM on first keypress
     if (isStandby) {
@@ -981,7 +983,7 @@ function GamePlayScreen({
         )}
       </main>
 
-      <section className="keyboard-area">
+      <section className="keyboard-area" style={{ width: `${canvasSize.width * 0.78}px` }}>
         {KEY_DETAILS.map((kd, idx) => (
           <Keycap
             key={kd.key}
@@ -1027,18 +1029,18 @@ function GamePlayScreen({
           <h2 className="menu-title" style={{ color: 'var(--neon-magenta)' }}>PAUSED</h2>
           <p className="menu-subtitle">{song.title}</p>
           
-          <button className="button-neon" onClick={handleResume}>
+          <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); handleResume(); }}>
             RESUME
           </button>
           
-          <button className="button-neon" style={{ borderColor: 'var(--neon-cyan)', boxShadow: '0 0 15px var(--neon-cyan-glow)' }} onClick={handleRestart}>
+          <button className="button-neon" style={{ borderColor: 'var(--neon-cyan)', boxShadow: '0 0 15px var(--neon-cyan-glow)' }} onClick={() => { if (playKeycapSound) playKeycapSound(); handleRestart(); }}>
             RESTART
           </button>
           
           <button 
             className="button-neon" 
             style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
-            onClick={handleQuit}
+            onClick={() => { if (playKeycapSound) playKeycapSound(); handleQuit(); }}
           >
             QUIT GAME
           </button>

@@ -96,7 +96,7 @@ function SongDetailsScreen({
 
       <button 
         className="button-neon" 
-        onClick={() => onPlay(song)}
+        onClick={() => { if (playKeycapSound) playKeycapSound(); onPlay(song); }}
         style={{ width: '100%', maxWidth: '280px', margin: '0 auto' }}
       >
         PLAY NOW

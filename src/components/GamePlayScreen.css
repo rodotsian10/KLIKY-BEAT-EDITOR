@@ -142,7 +142,6 @@
 }
 
 .keyboard-area {
-  width: 78%; /* Matches the laneWidthBottom factor (0.78) exactly! */
   margin: 0 auto;
   padding: 0px 0px 40px 0px;
   background: linear-gradient(to top, rgba(5,5,10,1) 80%, rgba(5,5,10,0));

@@ -469,6 +469,57 @@ function App() {
     setSongHighScores(scores);
   }, [gameState]);
 
+  // Handle app pause/minimize events on Android/iOS via Capacitor App Plugin
+  useEffect(() => {
+    let appStateListener = null;
+
+    const initListener = async () => {
+      try {
+        const { App: CapApp } = await import('@capacitor/app');
+        appStateListener = await CapApp.addListener('appStateChange', (state) => {
+          console.log('App state changed:', state);
+          if (!state.isActive) {
+            // App is minimized or running in the background - suspend AudioContext to stop all sound
+            if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
+              audioCtxRef.current.suspend();
+            }
+          } else {
+            // App returned to foreground - resume AudioContext if it was suspended
+            if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+              audioCtxRef.current.resume();
+            }
+          }
+        });
+      } catch (err) {
+        console.warn('Capacitor App plugin not available, falling back to document visibility API:', err);
+        // Fallback to standard web document visibilitychange API
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
+              audioCtxRef.current.suspend();
+            }
+          } else {
+            if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+              audioCtxRef.current.resume();
+            }
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        appStateListener = {
+          remove: () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+        };
+      }
+    };
+
+    initListener();
+
+    return () => {
+      if (appStateListener) {
+        appStateListener.remove();
+      }
+    };
+  }, []);
+
   const setupAudioContext = () => {
     if (audioCtxRef.current) return;
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -608,6 +659,7 @@ function App() {
           bgmBuffer={bgmBufferRef.current}
           sfxBuffers={sfxBuffersRef.current}
           keyLabels={keyLabels}
+          playKeycapSound={playKeycapSound}
           onGameOver={(finalScore, finalMaxCombo) => {
             setScore(finalScore);
             setMaxCombo(finalMaxCombo);
@@ -637,14 +689,14 @@ function App() {
             <div>MAX COMBO: <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{maxCombo}</span></div>
           </div>
 
-          <button className="button-neon" onClick={() => loadSongAssets(selectedSong)}>
+          <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
             PLAY AGAIN
           </button>
           
           <button 
             className="button-neon" 
             style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
-            onClick={() => setGameState('PLAYLIST')}
+            onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
           >
             SONG SELECT
           </button>
