@@ -1,0 +1,185 @@
+.game-header {
+  width: 100%;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  background: linear-gradient(to bottom, rgba(5,5,10,1) 40%, rgba(5,5,10,0));
+}
+
+.score-display {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+.pause-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pause-btn:hover {
+  background: rgba(255, 0, 127, 0.1);
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 10px var(--neon-magenta-glow);
+}
+
+/* Visualizer Canvas Area */
+.play-area {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Judgment Overlay */
+.judgment-overlay {
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.judgment-text {
+  font-family: var(--font-mono);
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  animation: judgment-pop-fade 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+}
+
+@keyframes judgment-pop-fade {
+  0% { transform: scale(0.6); opacity: 0; }
+  10% { transform: scale(1.1); opacity: 1; }
+  25% { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0; }
+}
+
+.judgment-text.perfect {
+  color: var(--neon-cyan);
+  text-shadow: 0 0 15px var(--neon-cyan), 0 0 30px var(--neon-cyan-glow);
+}
+.judgment-text.great {
+  color: var(--neon-green);
+  text-shadow: 0 0 15px var(--neon-green), 0 0 30px var(--neon-green-glow);
+}
+.judgment-text.good {
+  color: var(--neon-yellow);
+  text-shadow: 0 0 15px var(--neon-yellow), 0 0 30px var(--neon-yellow-glow);
+}
+.judgment-text.miss {
+  color: var(--neon-magenta);
+  text-shadow: 0 0 15px var(--neon-magenta), 0 0 30px var(--neon-magenta-glow);
+}
+
+/* Top-Right Neon Combo Display */
+.top-right-combo {
+  position: absolute;
+  top: 90px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 5;
+  animation: combo-bounce-pop 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.combo-num {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.combo-lbl {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--neon-cyan);
+  letter-spacing: 2px;
+  text-shadow: 0 0 5px var(--neon-cyan-glow);
+}
+
+@keyframes combo-bounce-pop {
+  0% { transform: scale(0.7); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1.0); }
+}
+
+.keyboard-area {
+  width: 78%; /* Matches the laneWidthBottom factor (0.78) exactly! */
+  margin: 0 auto;
+  padding: 0px 0px 40px 0px;
+  background: linear-gradient(to top, rgba(5,5,10,1) 80%, rgba(5,5,10,0));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 5;
+  gap: 12px;
+}
+
+/* Countdown Overlay */
+.countdown-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(3, 3, 5, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 150;
+  backdrop-filter: blur(4px);
+}
+
+.countdown-num {
+  font-family: var(--font-mono);
+  font-size: 6rem;
+  font-weight: 900;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan-glow);
+  animation: countdown-pulse 1s ease-out infinite;
+}
+
+@keyframes countdown-pulse {
+  0% { transform: scale(0.5); opacity: 0; }
+  15% { transform: scale(1.1); opacity: 1; }
+  25% { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0; }
+}
