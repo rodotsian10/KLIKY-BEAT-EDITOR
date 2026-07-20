@@ -477,43 +477,26 @@ function App() {
       try {
         const { App: CapApp } = await import('@capacitor/app');
         appStateListener = await CapApp.addListener('appStateChange', (state) => {
-          console.log('App state changed:', state);
           if (!state.isActive) {
-            // App is minimized or running in the background - suspend AudioContext to stop all sound
+            // App minimized → suspend audio + signal GamePlayScreen to auto-pause
             if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
               audioCtxRef.current.suspend();
             }
-          } else {
-            // App returned to foreground - only resume if we are not currently paused or waiting to start!
-            // To be extremely clean, we only resume if the AudioContext was running or needed.
-            // If the user deliberately paused the game, do not auto-resume audio playback!
-            // We can read the visibility state safely.
-            const isPausedEl = document.querySelector('.overlay-screen .menu-title');
-            const isPausedState = isPausedEl && isPausedEl.textContent === 'PAUSED';
-            if (!isPausedState) {
-              if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-                audioCtxRef.current.resume();
-              }
-            }
+            window.dispatchEvent(new CustomEvent('kliky-auto-pause'));
           }
+          // On foreground return: intentionally do NOT auto-resume.
+          // User must press RESUME button manually.
         });
       } catch (err) {
         console.warn('Capacitor App plugin not available, falling back to document visibility API:', err);
-        // Fallback to standard web document visibilitychange API
         const handleVisibilityChange = () => {
           if (document.hidden) {
             if (audioCtxRef.current && audioCtxRef.current.state === 'running') {
               audioCtxRef.current.suspend();
             }
-          } else {
-            const isPausedEl = document.querySelector('.overlay-screen .menu-title');
-            const isPausedState = isPausedEl && isPausedEl.textContent === 'PAUSED';
-            if (!isPausedState) {
-              if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
-                audioCtxRef.current.resume();
-              }
-            }
+            window.dispatchEvent(new CustomEvent('kliky-auto-pause'));
           }
+          // Foreground: do NOT auto-resume. User presses RESUME.
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
         appStateListener = {

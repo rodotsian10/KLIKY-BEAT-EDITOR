@@ -470,6 +470,20 @@ function GamePlayScreen({
     };
   }, [noteSpeed, song, isPaused, countdown, isStandby, isStarting]);
 
+  // Auto-pause when app goes to background (dispatched from App.jsx)
+  useEffect(() => {
+    const handleAutoPause = () => {
+      if (!isPaused && countdown === null && isPlayingRef.current && !isStandby) {
+        setIsPaused(true);
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend();
+        }
+      }
+    };
+    window.addEventListener('kliky-auto-pause', handleAutoPause);
+    return () => window.removeEventListener('kliky-auto-pause', handleAutoPause);
+  }, [isPaused, countdown, isStandby, audioCtx]);
+
   // Pause BGM and stop game updates
   const handlePause = () => {
     if (isPaused || countdown !== null) return;
@@ -965,6 +979,7 @@ function GamePlayScreen({
           ref={canvasRef}
           width={canvasSize.width}
           height={canvasSize.height}
+          style={{ width: canvasSize.width + 'px', height: canvasSize.height + 'px' }}
         />
 
         {/* Top-Right Neon Combo Display */}
@@ -985,7 +1000,7 @@ function GamePlayScreen({
         )}
       </main>
 
-      <section className="keyboard-area" style={{ width: `${Math.min(canvasSize.width * 0.78, canvasSize.height * 0.85)}px`, maxWidth: '100%', gap: '0px', padding: '0 0px 40px 0px' }}>
+      <section className="keyboard-area" style={{ width: `${Math.min(canvasSize.width * 0.78, canvasSize.height * 0.85)}px` }}>
         {KEY_DETAILS.map((kd, idx) => (
           <Keycap
             key={kd.key}
