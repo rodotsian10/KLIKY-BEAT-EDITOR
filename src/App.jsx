@@ -422,6 +422,19 @@ const SONGS = [
       { beat: 206.25, lane: 2, type: 'short' },
       { beat: 206.50, lane: 2, type: 'short' }
     ]
+  },
+  {
+    id: 'canon-in-harp',
+    title: 'Canon in Harp',
+    artist: 'Neko Legends',
+    path: '/audio/canon_harp.dat',
+    encrypted: true,
+    bpm: 100,
+    duration: '4:00',
+    difficulty: 'NORMAL',
+    highScoreKey: 'high_score_canon_harp',
+    coverColor: '#ff66cc',
+    chart: []
   }
 ];
 
@@ -450,6 +463,9 @@ function App() {
   const [isFromEditor, setIsFromEditor] = useState(false);
   const [gameResult, setGameResult] = useState(null);
   const [loadProgress, setLoadProgress] = useState(0);
+
+  // Custom Song State (debug mode only, always at bottom of list)
+  const [customSong, setCustomSong] = useState(null); // { title, audioUrl, chart, bpm }
 
   // Audio Cache Refs
   const audioCtxRef = useRef(null);
@@ -561,28 +577,39 @@ function App() {
     setLoadProgress(10);
     setSelectedSong(song);
     setIsCustomChart(!!song.chart);
-
     try {
       // Check cache for BGM
       let bgmBuffer = loadedBgmBuffersRef.current[song.id];
       if (!bgmBuffer) {
-        const response = await fetch(encodeURI(song.path));
-        if (!response.ok) throw new Error('BGM failed to fetch');
-        let arrayBuf = await response.arrayBuffer();
+        let arrayBuf;
 
-        // If track is encrypted asset, perform in-memory XOR decryption
-        if (song.encrypted) {
-          const secretKey = new TextEncoder().encode('KLIKY_BEAT_NEKO_LEGENDS_CANON_HARP_2026');
-          const view = new Uint8Array(arrayBuf);
-          const decrypted = new Uint8Array(arrayBuf.byteLength);
-          for (let i = 0; i < view.length; i++) {
-            decrypted[i] = view[i] ^ secretKey[i % secretKey.length];
+        // Custom song: audioUrl is a blob URL from user upload
+        if (song.audioUrl) {
+          const response = await fetch(song.audioUrl);
+          if (!response.ok) throw new Error('Custom audio failed to fetch');
+          arrayBuf = await response.arrayBuffer();
+        } else {
+          const response = await fetch(encodeURI(song.path));
+          if (!response.ok) throw new Error('BGM failed to fetch');
+          arrayBuf = await response.arrayBuffer();
+
+          // If track is encrypted asset, perform in-memory XOR decryption
+          if (song.encrypted) {
+            const secretKey = new TextEncoder().encode('KLIKY_BEAT_NEKO_LEGENDS_CANON_HARP_2026');
+            const view = new Uint8Array(arrayBuf);
+            const decrypted = new Uint8Array(arrayBuf.byteLength);
+            for (let i = 0; i < view.length; i++) {
+              decrypted[i] = view[i] ^ secretKey[i % secretKey.length];
+            }
+            arrayBuf = decrypted.buffer;
           }
-          arrayBuf = decrypted.buffer;
         }
 
         bgmBuffer = await ctx.decodeAudioData(arrayBuf);
-        loadedBgmBuffersRef.current[song.id] = bgmBuffer;
+        // Don't cache custom songs so fresh uploads always load correctly
+        if (!song.audioUrl) {
+          loadedBgmBuffersRef.current[song.id] = bgmBuffer;
+        }
       }
       bgmBufferRef.current = bgmBuffer;
       setLoadProgress(60);
@@ -654,6 +681,14 @@ function App() {
           songHighScores={songHighScores}
           onOpenSettings={() => setShowSettings(true)}
           playKeycapSound={playKeycapSound}
+          debugMode={debugMode}
+          customSong={customSong}
+          setCustomSong={setCustomSong}
+          onSelectCustomSong={(song) => {
+            setIsCustomChart(true);
+            setSelectedSong(song);
+            setGameState('DETAILS');
+          }}
         />
       )}
 

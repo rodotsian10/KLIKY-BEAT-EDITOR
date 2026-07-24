@@ -150,3 +150,114 @@
   font-size: 0.75rem;
   color: var(--text-secondary);
 }
+
+/* ── CUSTOM SONG SECTION ─────────────────────────────── */
+.custom-song-section {
+  margin-top: 8px;
+  border: 1px dashed rgba(168, 85, 247, 0.4);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(168, 85, 247, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-song-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.custom-song-label {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.custom-song-hint {
+  font-size: 0.7rem;
+  color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.1);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.custom-upload-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 10px;
+  color: #a855f7;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.custom-upload-btn:hover {
+  background: rgba(168, 85, 247, 0.2);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+}
+
+.custom-bpm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-field-label {
+  font-size: 0.8rem;
+  color: rgba(168, 85, 247, 0.8);
+  font-family: var(--font-mono);
+}
+
+.custom-bpm-input {
+  width: 80px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  color: #fff;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.custom-json-textarea {
+  width: 100%;
+  height: 100px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 8px;
+  color: #a855f7;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 8px;
+  box-sizing: border-box;
+  resize: vertical;
+  outline: none;
+}
+
+.custom-json-textarea::placeholder {
+  color: rgba(168, 85, 247, 0.35);
+}
+
+.custom-play-card {
+  border-color: rgba(168, 85, 247, 0.3) !important;
+}
+
+.custom-play-card:hover {
+  border-color: #a855f7 !important;
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.3) !important;
+}
+
+.custom-play-card.active {
+  border-color: #a855f7 !important;
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.5) !important;
+}
