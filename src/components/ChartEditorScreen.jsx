@@ -187,13 +187,40 @@ function ChartEditorScreen({
     }
   };
 
-  // ─── Keyboard: Scrubbing + Universal Hold-to-LongNote Recording ────────────
-  useEffect(() => {
-    const getCurrentBeat = () => {
-      const t = audioRef.current ? audioRef.current.currentTime : 0;
-      return t / (60 / bpmRef.current);
-    };
+  const triggerLanePress = (laneIdx) => {
+    if (playKeycapSound) playKeycapSound();
+    const t = audioRef.current ? audioRef.current.currentTime : 0;
+    const currentBeat = t / (60 / bpmRef.current);
+    activeHoldsRef.current[laneIdx] = currentBeat;
+  };
 
+  const triggerLaneRelease = (laneIdx) => {
+    if (activeHoldsRef.current[laneIdx] !== undefined) {
+      const startBeat = activeHoldsRef.current[laneIdx];
+      const t = audioRef.current ? audioRef.current.currentTime : 0;
+      const endBeat = t / (60 / bpmRef.current);
+      const duration = endBeat - startBeat;
+
+      const newNote = duration >= 0.2
+        ? {
+            beat: parseFloat(startBeat.toFixed(2)),
+            lane: laneIdx,
+            type: 'hold',
+            durationBeats: parseFloat(duration.toFixed(2))
+          }
+        : {
+            beat: parseFloat(startBeat.toFixed(2)),
+            lane: laneIdx,
+            type: 'short'
+          };
+
+      setNotes(prev => [...prev, newNote].sort((a, b) => a.beat - b.beat));
+      delete activeHoldsRef.current[laneIdx];
+    }
+  };
+
+  // Keyboard Shortcuts (Scrubbing with ← / → & Live Tap Recording)
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
@@ -208,7 +235,6 @@ function ChartEditorScreen({
           const t = Math.max(0, audioRef.current.currentTime - 1.0);
           audioRef.current.currentTime = t;
           setDisplayTime(t);
-          // Immediately update playhead DOM on scrub
           const beat = t / (60 / bpmRef.current);
           if (playheadRef.current) playheadRef.current.style.top = `${beat * zoomRef.current}px`;
           if (playheadTagRef.current) playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
@@ -236,37 +262,16 @@ function ChartEditorScreen({
         return;
       }
 
-      // D/F/J/K → Always track hold start (universal hold note system)
       const laneIdx = laneKeys.indexOf(e.code);
       if (laneIdx !== -1 && !e.repeat) {
-        if (playKeycapSound) playKeycapSound();
-        // Record the exact beat when key was pressed
-        activeHoldsRef.current[laneIdx] = getCurrentBeat();
+        triggerLanePress(laneIdx);
       }
     };
 
     const handleKeyUp = (e) => {
       const laneIdx = laneKeys.indexOf(e.code);
-      if (laneIdx !== -1 && activeHoldsRef.current[laneIdx] !== undefined) {
-        const startBeat = activeHoldsRef.current[laneIdx];
-        const endBeat = getCurrentBeat();
-        const duration = endBeat - startBeat;
-
-        const newNote = duration >= 0.2
-          ? {
-              beat: parseFloat(startBeat.toFixed(2)),
-              lane: laneIdx,
-              type: 'hold',
-              durationBeats: parseFloat(duration.toFixed(2))
-            }
-          : {
-              beat: parseFloat(startBeat.toFixed(2)),
-              lane: laneIdx,
-              type: 'short'
-            };
-
-        setNotes(prev => [...prev, newNote].sort((a, b) => a.beat - b.beat));
-        delete activeHoldsRef.current[laneIdx];
+      if (laneIdx !== -1) {
+        triggerLaneRelease(laneIdx);
       }
     };
 
@@ -276,15 +281,7 @@ function ChartEditorScreen({
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [playKeycapSound]); // Minimal deps — uses refs for bpm/zoom/etc.
-
-  // Click on track lane to manually place a short note
-  const handleTrackLaneClick = (laneIdx, e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickY = e.clientY - rect.top + trackScrollRef.current.scrollTop;
-    const clickedBeat = parseFloat((clickY / zoomLevel).toFixed(2));
-    setNotes(prev => [...prev, { beat: clickedBeat, lane: laneIdx, type: 'short' }].sort((a, b) => a.beat - b.beat));
-  };
+  }, [playKeycapSound]);
 
   const deleteNote = (idx, e) => {
     if (e) e.stopPropagation();
@@ -448,7 +445,7 @@ function ChartEditorScreen({
             <span style={{ margin: '0 12px' }}>|</span>
             BEAT: <span className="yellow">{currentBeat.toFixed(2)}b</span>
             <span className="shortcut-hint">
-              ⌨️ [Space] Play/Pause | [←/→] ±1s | 꾹 누르면 롱노트 | 클릭으로 노트 추가
+              ⌨️ [Space] Play/Pause | [←/→] ±1s | 1/2/3/4 터치 & [D/F/J/K] 꾹 누르면 롱노트
             </span>
           </div>
 
@@ -472,12 +469,20 @@ function ChartEditorScreen({
                 );
               })}
 
-              {/* 4 Lane columns */}
+              {/* 4 Lane columns with 1 2 3 4 interactive header buttons */}
               {[0, 1, 2, 3].map(laneIdx => (
-                <div key={laneIdx} className={`large-track-lane lane-${laneIdx}`}
-                  onClick={(e) => handleTrackLaneClick(laneIdx, e)}>
-                  <div className="lane-header-label" style={{ color: laneColors[laneIdx] }}>
-                    {laneNames[laneIdx]}
+                <div key={laneIdx} className={`large-track-lane lane-${laneIdx}`}>
+                  <div className="lane-header-label">
+                    <button
+                      className="lane-trigger-btn"
+                      style={{ color: laneColors[laneIdx], borderColor: laneColors[laneIdx] }}
+                      onMouseDown={(e) => { e.stopPropagation(); triggerLanePress(laneIdx); }}
+                      onMouseUp={(e) => { e.stopPropagation(); triggerLaneRelease(laneIdx); }}
+                      onTouchStart={(e) => { e.stopPropagation(); triggerLanePress(laneIdx); }}
+                      onTouchEnd={(e) => { e.stopPropagation(); triggerLaneRelease(laneIdx); }}
+                    >
+                      {laneIdx + 1} ({['D', 'F', 'J', 'K'][laneIdx]})
+                    </button>
                   </div>
                 </div>
               ))}

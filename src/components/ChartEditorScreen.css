@@ -217,7 +217,7 @@
   height: 100%;
   border-right: 1px dashed rgba(255, 255, 255, 0.12);
   position: relative;
-  cursor: crosshair;
+  cursor: default;
 }
 
 .large-track-lane:last-child {
@@ -225,20 +225,37 @@
 }
 
 .large-track-lane:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 
 .lane-header-label {
   position: sticky;
   top: 0;
-  background: rgba(0, 0, 0, 0.85);
-  padding: 6px 0;
+  background: rgba(0, 0, 0, 0.9);
+  padding: 4px;
   text-align: center;
-  font-family: var(--font-mono);
-  font-weight: 900;
-  font-size: 0.85rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   z-index: 20;
+}
+
+.lane-trigger-btn {
+  width: 100%;
+  padding: 8px 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 2px solid #fff;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.05s ease, background 0.05s ease;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.lane-trigger-btn:active {
+  transform: scale(0.94);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 /* Beat Lines Top-to-Bottom */
