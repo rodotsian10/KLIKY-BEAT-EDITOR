@@ -442,8 +442,19 @@ const SONGS = [
 const KEY_SOUNDS = Array.from({ length: 10 }, (_, i) => `/key${i + 1}.mp3`);
 
 function App() {
-  // Navigation & Screens state: INTRO, PLAYLIST, DETAILS, LOADING, PLAYING, GAME_OVER
-  const [gameState, setGameState] = useState('INTRO');
+  // Navigation & Screens state: INTRO, PLAYLIST, DETAILS, LOADING, PLAYING, GAME_OVER, EDITOR
+  const [isEditorOnly] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'editor' || window.location.pathname.includes('/editor');
+  });
+
+  const [gameState, setGameState] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'editor' || window.location.pathname.includes('/editor')) {
+      return 'EDITOR';
+    }
+    return 'INTRO';
+  });
   const [selectedSong, setSelectedSong] = useState(SONGS[0]);
   const [showSettings, setShowSettings] = useState(false);
   
@@ -716,7 +727,7 @@ function App() {
           audioCtx={audioCtxRef.current}
           sfxBuffers={sfxBuffersRef.current}
           playKeycapSound={playKeycapSound}
-          onBack={() => {
+          onBack={isEditorOnly ? undefined : () => {
             setIsFromEditor(false);
             setGameState('PLAYLIST');
           }}

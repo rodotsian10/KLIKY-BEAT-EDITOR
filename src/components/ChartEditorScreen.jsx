@@ -339,7 +339,7 @@ function ChartEditorScreen({
     <div className="chart-editor-screen">
       {/* HEADER */}
       <header className="editor-header">
-        <button className="button-neon editor-back-btn" onClick={onBack}>← EXIT</button>
+        {onBack && <button className="button-neon editor-back-btn" onClick={onBack}>← EXIT</button>}
         <h2 className="editor-title">🎛️ KLIKY-BEAT 4-LANE STUDIO</h2>
         <button className="button-neon editor-test-btn" onClick={handleStartInGameTest}>
           🎮 TEST PLAY IN-GAME
