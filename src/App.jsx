@@ -439,7 +439,7 @@ function App() {
   
   // Modifiers
   const [noteSpeed, setNoteSpeed] = useState(4.0);
-  const [bgmVolume, setBgmVolume] = useState(0.7);
+  const [bgmVolume, setBgmVolume] = useState(0.3);
   const [sfxVolume, setSfxVolume] = useState(0.8);
   const [keyLabels, setKeyLabels] = useState(['D', 'F', 'J', 'K']);
   const [loadProgress, setLoadProgress] = useState(0);

@@ -109,18 +109,18 @@ function SettingsModal({
           {showCopyright && (
             <div className="copyright-content-box">
               <p className="copyright-item-title">🎵 BGM CREDIT (음원 출처)</p>
-              <textarea 
-                className="copyright-textarea" 
-                defaultValue={"Song: Different Heaven & EH!DE - My Heart [NCS Release]\nMusic provided by NoCopyrightSounds.\nFree Download/Stream: http://ncs.io/myheart\nWatch: http://youtu.be/jK2aIUmmdP4"}
-                rows={4}
-              />
+              <div className="copyright-text-box">
+                Song: Different Heaven & EH!DE - My Heart [NCS Release]<br />
+                Music provided by NoCopyrightSounds.<br />
+                Free Download/Stream: <span className="copyright-link">http://ncs.io/myheart</span><br />
+                Watch: <span className="copyright-link">http://youtu.be/jK2aIUmmdP4</span>
+              </div>
               
-              <p className="copyright-item-title">🔊 KEY SFX CREDIT (타건음 출처)</p>
-              <textarea 
-                className="copyright-textarea" 
-                defaultValue="Mechanical Blue/Brown Switches Sound Pack&#10;Key SFX 1-10: Custom recorded keyboard audio assets."
-                rows={3}
-              />
+              <p className="copyright-item-title" style={{ marginTop: '10px' }}>🔊 KEY SFX CREDIT (타건음 출처)</p>
+              <div className="copyright-text-box">
+                Mechanical Blue/Brown Switches Sound Pack<br />
+                Key SFX 1-10: Custom recorded keyboard audio assets.
+              </div>
             </div>
           )}
         </div>
