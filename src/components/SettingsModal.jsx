@@ -78,11 +78,19 @@ function SettingsModal({
           </div>
 
           {debugMode && (
-            <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+            <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '8px' }}>
               <span className="setting-label">🎛️ CHART STUDIO:</span>
               <button 
                 className="debug-toggle-btn active"
-                style={{ background: 'var(--neon-magenta)', borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
+                style={{ 
+                  color: '#ffffff', 
+                  backgroundColor: 'rgba(255, 0, 127, 0.3)', 
+                  borderColor: 'var(--neon-magenta)', 
+                  boxShadow: '0 0 15px var(--neon-magenta-glow)',
+                  fontWeight: 'bold',
+                  whiteSpace: 'nowrap',
+                  padding: '8px 16px'
+                }}
                 onClick={() => {
                   if (playKeycapSound) playKeycapSound();
                   onClose();

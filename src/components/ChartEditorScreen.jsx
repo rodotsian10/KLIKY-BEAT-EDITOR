@@ -98,15 +98,34 @@ function ChartEditorScreen({
     };
   }, [currentSong, customAudioUrl]);
 
-  // Sync scroll positioning Top-to-Bottom as music plays
+  // Smooth 60FPS Animation Loop for Ultra-Smooth Playhead & Track Scrolling
   useEffect(() => {
-    if (trackScrollRef.current) {
-      const secondsPerBeat = 60 / bpm;
-      const currentBeat = currentTime / secondsPerBeat;
-      const targetTop = currentBeat * zoomLevel - 160;
-      trackScrollRef.current.scrollTop = Math.max(0, targetTop);
+    let animFrameId = null;
+
+    const updateSmoothTime = () => {
+      if (audioRef.current && !audioRef.current.paused) {
+        const exactTime = audioRef.current.currentTime;
+        setCurrentTime(exactTime);
+
+        if (trackScrollRef.current) {
+          const secondsPerBeat = 60 / bpm;
+          const currentBeat = exactTime / secondsPerBeat;
+          const targetTop = currentBeat * zoomLevel - 160;
+          trackScrollRef.current.scrollTop = Math.max(0, targetTop);
+        }
+
+        animFrameId = requestAnimationFrame(updateSmoothTime);
+      }
+    };
+
+    if (isPlaying) {
+      animFrameId = requestAnimationFrame(updateSmoothTime);
     }
-  }, [currentTime, bpm, zoomLevel]);
+
+    return () => {
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+    };
+  }, [isPlaying, bpm, zoomLevel]);
 
   // Audio Play / Pause Toggle
   const togglePlay = () => {
