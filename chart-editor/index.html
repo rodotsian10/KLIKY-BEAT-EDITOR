@@ -505,7 +505,27 @@
     const inspectorList = document.getElementById('inspector-list');
     const jsonIO = document.getElementById('json-io');
 
-    const pxPerBeat = 120; // 1 beat = 120px height
+    async function loadAudioSource(pathUrl) {
+      try {
+        if (pathUrl.includes('canon_harp.dat')) {
+          const res = await fetch(pathUrl);
+          const arrayBuf = await res.arrayBuffer();
+          const secretKey = new TextEncoder().encode('KLIKY_BEAT_NEKO_LEGENDS_CANON_HARP_2026');
+          const view = new Uint8Array(arrayBuf);
+          const decrypted = new Uint8Array(arrayBuf.byteLength);
+          for (let i = 0; i < view.length; i++) {
+            decrypted[i] = view[i] ^ secretKey[i % secretKey.length];
+          }
+          const blob = new Blob([decrypted.buffer], { type: 'audio/wav' });
+          audio.src = URL.createObjectURL(blob);
+        } else {
+          audio.src = pathUrl;
+        }
+        audio.play();
+      } catch (e) {
+        console.error('Audio load error:', e);
+      }
+    }
 
     // Audio Source Changing & Custom Upload
     audioSelect.addEventListener('change', (e) => {
@@ -513,8 +533,7 @@
       if (val === 'custom') {
         audioFileInput.click();
       } else {
-        audio.src = val;
-        audio.play();
+        loadAudioSource(val);
       }
     });
 
