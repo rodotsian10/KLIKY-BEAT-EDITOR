@@ -588,7 +588,8 @@ function App() {
     setGameState('LOADING');
     setLoadProgress(10);
     setSelectedSong(song);
-    setIsCustomChart(!!song.chart);
+    // isCustomChart is true ONLY if playing user custom song (id: custom-song) or testing custom file from editor
+    setIsCustomChart(song.id === 'custom-song' || (isFromEditor && song.artist === 'LOCAL FILE'));
     try {
       // Check cache for BGM
       let bgmBuffer = loadedBgmBuffersRef.current[song.id];
@@ -765,7 +766,7 @@ function App() {
           bgmBuffer={bgmBufferRef.current}
           sfxBuffers={sfxBuffersRef.current}
           keyLabels={keyLabels}
-          isAutoPlay={isAutoPlay}
+          isAutoPlay={debugMode && isAutoPlay}
           isCustomChart={isCustomChart}
           playKeycapSound={playKeycapSound}
           onGameOver={(finalScore, finalMaxCombo, judgmentCounts, totalNotes) => {

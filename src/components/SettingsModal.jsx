@@ -70,7 +70,11 @@ function SettingsModal({
               className={`debug-toggle-btn ${debugMode ? 'active' : ''}`}
               onClick={() => {
                 if (playKeycapSound) playKeycapSound();
-                setDebugMode(!debugMode);
+                const nextDebug = !debugMode;
+                setDebugMode(nextDebug);
+                if (!nextDebug && setIsAutoPlay) {
+                  setIsAutoPlay(false);
+                }
               }}
             >
               {debugMode ? 'ON (채보 에디터 켜짐)' : 'OFF (기본 모드)'}
