@@ -678,16 +678,31 @@ function GamePlayScreen({
     ctx.clearRect(0, 0, width, height);
     const elapsedTime = getGameTime();
     
-    // Song fadeout trigger when reaching chart end (fade out 2s smoothly)
-    if (elapsedTime >= chartEndTimeRef.current) {
+    // Song fadeout sequence when last note passes judgment line
+    if (elapsedTime >= chartEndTimeRef.current + 1.0) {
       if (!isEndingRef.current) {
         isEndingRef.current = true;
+
+        // Smooth 2-second gain fadeout
         if (bgmGainNodeRef.current && audioCtx) {
           try {
-            bgmGainNodeRef.current.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 2.0);
-          } catch (e) {}
+            const now = audioCtx.currentTime;
+            const currentG = bgmGainNodeRef.current.gain.value;
+            bgmGainNodeRef.current.gain.setValueAtTime(currentG, now);
+            bgmGainNodeRef.current.gain.exponentialRampToValueAtTime(0.0001, now + 2.0);
+          } catch (e) {
+            try {
+              bgmGainNodeRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+            } catch (err) {}
+          }
         }
+
+        // Wait full 2 seconds for music to fade out, stop source, then switch to ending screen
         setTimeout(() => {
+          if (bgmSourceRef.current) {
+            try { bgmSourceRef.current.stop(); } catch (e) {}
+            bgmSourceRef.current = null;
+          }
           isPlayingRef.current = false;
           onGameOver(scoreRef.current, maxComboRef.current, judgmentCountsRef.current, notesRef.current.length);
         }, 2000);
