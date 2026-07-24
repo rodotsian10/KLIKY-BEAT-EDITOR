@@ -800,7 +800,7 @@ function App() {
 
       {/* 6. GAME OVER / RESULT SCREEN */}
       {gameState === 'GAME_OVER' && (
-        <div className="overlay-screen">
+        <div className="overlay-screen result-screen">
           <h1 className="menu-title" style={{ color: gameResult?.tier?.color || 'var(--neon-green)', textShadow: `0 0 20px ${gameResult?.tier?.glow}` }}>
             {gameResult?.tier?.label || 'FINISH!'}
           </h1>

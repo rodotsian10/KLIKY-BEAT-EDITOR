@@ -227,11 +227,15 @@
   color: #fff;
 }
 
-/* Mobile responsive fixes for Overlay / Game Over screens */
+/* Mobile responsive fixes for Overlay / Game Over / Loading screens */
 @media (max-width: 768px) {
   .overlay-screen {
     padding: 16px 12px;
     overflow-y: auto;
+    justify-content: center;
+  }
+
+  .overlay-screen.result-screen {
     justify-content: flex-start;
   }
 
