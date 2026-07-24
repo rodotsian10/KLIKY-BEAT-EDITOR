@@ -822,7 +822,7 @@ function GamePlayScreen({
 
     // 6. Draw falling notes & process AutoPlay / Miss / Hold Haptics
     notes.forEach((note) => {
-      // AUTO PLAY Logic: System auto-hits notes with PERFECT accuracy if enabled
+      // AUTO PLAY Logic: System auto-hits notes with PERFECT accuracy & depresses keycaps visually
       if (isAutoPlay) {
         if (note.type === 'short' && !note.hit && !note.miss && elapsedTime >= note.time) {
           note.hit = true;
@@ -831,11 +831,35 @@ function GamePlayScreen({
           setLastJudgment({ text: 'PERFECT', type: 'perfect', key: Date.now() });
           judgmentCountsRef.current.perfect += 1;
           spawnParticles(note.lane, KEY_DETAILS[note.lane].neon);
+          triggerKeycapAudio();
+
+          // Visually press and release keycap
+          setPressedKeys(prev => {
+            const next = [...prev];
+            next[note.lane] = true;
+            return next;
+          });
+          const targetLane = note.lane;
+          setTimeout(() => {
+            setPressedKeys(prev => {
+              const next = [...prev];
+              next[targetLane] = false;
+              return next;
+            });
+          }, 110);
         } else if (note.type === 'hold') {
           if (!note.hitStart && !note.miss && elapsedTime >= note.time) {
             note.hitStart = true;
             note.active = true;
             spawnParticles(note.lane, KEY_DETAILS[note.lane].neon, 6);
+            triggerKeycapAudio();
+            
+            // Press keycap down during hold
+            setPressedKeys(prev => {
+              const next = [...prev];
+              next[note.lane] = true;
+              return next;
+            });
           }
           if (note.active && !note.hitEnd && elapsedTime >= note.time + note.duration) {
             note.active = false;
@@ -846,6 +870,13 @@ function GamePlayScreen({
             setLastJudgment({ text: 'PERFECT', type: 'perfect', key: Date.now() });
             judgmentCountsRef.current.perfect += 1;
             spawnParticles(note.lane, KEY_DETAILS[note.lane].neon, 15);
+
+            // Release keycap at hold end
+            setPressedKeys(prev => {
+              const next = [...prev];
+              next[note.lane] = false;
+              return next;
+            });
           }
         }
       }
