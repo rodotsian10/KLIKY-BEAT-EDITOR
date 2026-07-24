@@ -813,67 +813,72 @@ function App() {
       {/* 6. GAME OVER / RESULT SCREEN */}
       {gameState === 'GAME_OVER' && (
         <div className="overlay-screen result-screen">
-          <div className="result-content-wrapper">
-            {/* LEFT COLUMN: Title, Tier Badge, Song, Score */}
-            <div className="result-left-column">
+          <div className="result-card-container">
+            {/* 1. Header Banner */}
+            <div className="result-header-area">
+              <span className="result-song-name">{selectedSong.title}</span>
               <h1 className="menu-title" style={{ color: gameResult?.tier?.color || 'var(--neon-green)', textShadow: `0 0 20px ${gameResult?.tier?.glow}` }}>
                 {gameResult?.tier?.label || 'FINISH!'}
               </h1>
-              
-              <div className="result-tier-badge" style={{ borderColor: gameResult?.tier?.color, color: gameResult?.tier?.color, boxShadow: `0 0 25px ${gameResult?.tier?.glow}` }}>
-                {gameResult?.tier?.name || 'CLEAR'}
-              </div>
-
               {gameResult?.isUnranked && (
                 <div className="unranked-badge">
                   ⚠️ UNRANKED (기록 미반영)
                 </div>
               )}
+            </div>
 
-              <div className="result-song-title">
-                {selectedSong.title}
+            {/* 2. Middle Main Stats (Left Tier/Score - Right Judgment breakdown) */}
+            <div className="result-body-grid">
+              {/* Left Side: Big Tier Rank & Score */}
+              <div className="result-tier-score-box">
+                <div className="result-tier-badge" style={{ borderColor: gameResult?.tier?.color, color: gameResult?.tier?.color, boxShadow: `0 0 25px ${gameResult?.tier?.glow}` }}>
+                  {gameResult?.tier?.name || 'CLEAR'}
+                </div>
+                <div className="result-big-score">
+                  <div className="score-label">SCORE</div>
+                  <div className="score-value">{score}</div>
+                </div>
+                <div className="result-acc-row">
+                  ACC <span>{gameResult?.accuracy}%</span>
+                </div>
               </div>
 
-              <div className="result-score-banner">
-                <div className="score-num">SCORE: <span>{score}</span></div>
-                <div className="acc-num">ACC: <span>{gameResult?.accuracy}%</span></div>
+              {/* Right Side: Judgment Counts & Max Combo */}
+              <div className="result-breakdown-box">
+                <div className="result-stats-grid">
+                  <div className="stat-item"><span className="stat-label cyan">PERFECT</span><span className="stat-val">{gameResult?.counts?.perfect || 0}</span></div>
+                  <div className="stat-item"><span className="stat-label green">GREAT</span><span className="stat-val">{gameResult?.counts?.great || 0}</span></div>
+                  <div className="stat-item"><span className="stat-label yellow">GOOD</span><span className="stat-val">{gameResult?.counts?.good || 0}</span></div>
+                  <div className="stat-item"><span className="stat-label magenta">MISS</span><span className="stat-val">{gameResult?.counts?.miss || 0}</span></div>
+                </div>
+
+                <div className="result-maxcombo-row">
+                  MAX COMBO <span>{maxCombo}</span>
+                </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: Statistics Grid, Max Combo & Action Buttons */}
-            <div className="result-right-column">
-              <div className="result-stats-grid">
-                <div className="stat-item"><span className="stat-label cyan">PERFECT</span><span className="stat-val">{gameResult?.counts?.perfect || 0}</span></div>
-                <div className="stat-item"><span className="stat-label green">GREAT</span><span className="stat-val">{gameResult?.counts?.great || 0}</span></div>
-                <div className="stat-item"><span className="stat-label yellow">GOOD</span><span className="stat-val">{gameResult?.counts?.good || 0}</span></div>
-                <div className="stat-item"><span className="stat-label magenta">MISS</span><span className="stat-val">{gameResult?.counts?.miss || 0}</span></div>
-              </div>
-
-              <div className="result-maxcombo-row">
-                MAX COMBO: <span>{maxCombo}</span>
-              </div>
-
-              <div className="result-action-buttons">
-                <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
-                  PLAY AGAIN
+            {/* 3. Bottom Action Buttons */}
+            <div className="result-action-buttons">
+              <button className="button-neon play-again-btn" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
+                🎮 PLAY AGAIN
+              </button>
+              
+              {isFromEditor ? (
+                <button 
+                  className="button-neon editor-btn" 
+                  onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('EDITOR'); }}
+                >
+                  🎛️ BACK TO EDITOR
                 </button>
-                
-                {isFromEditor ? (
-                  <button 
-                    className="button-neon editor-btn" 
-                    onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('EDITOR'); }}
-                  >
-                    BACK TO EDITOR
-                  </button>
-                ) : (
-                  <button 
-                    className="button-neon select-btn" 
-                    onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
-                  >
-                    SONG SELECT
-                  </button>
-                )}
-              </div>
+              ) : (
+                <button 
+                  className="button-neon select-btn" 
+                  onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
+                >
+                  🎵 SONG SELECT
+                </button>
+              )}
             </div>
           </div>
         </div>
