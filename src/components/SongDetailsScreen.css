@@ -180,17 +180,19 @@
 /* Play Now & Auto row */
 .details-play-row {
   width: 100%;
-  max-width: 340px;
+  max-width: 480px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 4px 0 0 0;
+  gap: 12px;
+  margin: 6px 0 0 0;
 }
 
 .details-play-btn {
   flex: 1;
-  font-size: 1.1rem;
-  padding: 12px 20px;
+  min-width: 180px;
+  white-space: nowrap;
+  font-size: 1.15rem;
+  padding: 12px 28px;
 }
 
 .details-auto-btn {
