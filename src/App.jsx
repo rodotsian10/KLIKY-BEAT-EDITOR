@@ -813,69 +813,68 @@ function App() {
       {/* 6. GAME OVER / RESULT SCREEN */}
       {gameState === 'GAME_OVER' && (
         <div className="overlay-screen result-screen">
-          <h1 className="menu-title" style={{ color: gameResult?.tier?.color || 'var(--neon-green)', textShadow: `0 0 20px ${gameResult?.tier?.glow}` }}>
-            {gameResult?.tier?.label || 'FINISH!'}
-          </h1>
-          
-          <div style={{ margin: '15px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-            {/* Tier Badge */}
-            <div className="result-tier-badge" style={{ borderColor: gameResult?.tier?.color, color: gameResult?.tier?.color, boxShadow: `0 0 25px ${gameResult?.tier?.glow}` }}>
-              {gameResult?.tier?.name || 'CLEAR'}
-            </div>
-
-            {/* Unranked Warning Badge */}
-            {gameResult?.isUnranked && (
-              <div className="unranked-badge">
-                ⚠️ UNRANKED (오토/커스텀 플레이로 기록 미반영)
+          <div className="result-content-wrapper">
+            {/* LEFT COLUMN: Title, Tier Badge, Song, Score */}
+            <div className="result-left-column">
+              <h1 className="menu-title" style={{ color: gameResult?.tier?.color || 'var(--neon-green)', textShadow: `0 0 20px ${gameResult?.tier?.glow}` }}>
+                {gameResult?.tier?.label || 'FINISH!'}
+              </h1>
+              
+              <div className="result-tier-badge" style={{ borderColor: gameResult?.tier?.color, color: gameResult?.tier?.color, boxShadow: `0 0 25px ${gameResult?.tier?.glow}` }}>
+                {gameResult?.tier?.name || 'CLEAR'}
               </div>
-            )}
 
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px' }}>
-              {selectedSong.title}
+              {gameResult?.isUnranked && (
+                <div className="unranked-badge">
+                  ⚠️ UNRANKED (기록 미반영)
+                </div>
+              )}
+
+              <div className="result-song-title">
+                {selectedSong.title}
+              </div>
+
+              <div className="result-score-banner">
+                <div className="score-num">SCORE: <span>{score}</span></div>
+                <div className="acc-num">ACC: <span>{gameResult?.accuracy}%</span></div>
+              </div>
             </div>
 
-            <div style={{ fontSize: '1.2rem', margin: '4px 0' }}>
-              SCORE: <span style={{ color: '#fff', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>{score}</span>
-              <span style={{ marginLeft: '16px', color: 'var(--neon-cyan)', fontSize: '1rem', fontFamily: 'var(--font-mono)' }}>
-                ACC: {gameResult?.accuracy}%
-              </span>
-            </div>
+            {/* RIGHT COLUMN: Statistics Grid, Max Combo & Action Buttons */}
+            <div className="result-right-column">
+              <div className="result-stats-grid">
+                <div className="stat-item"><span className="stat-label cyan">PERFECT</span><span className="stat-val">{gameResult?.counts?.perfect || 0}</span></div>
+                <div className="stat-item"><span className="stat-label green">GREAT</span><span className="stat-val">{gameResult?.counts?.great || 0}</span></div>
+                <div className="stat-item"><span className="stat-label yellow">GOOD</span><span className="stat-val">{gameResult?.counts?.good || 0}</span></div>
+                <div className="stat-item"><span className="stat-label magenta">MISS</span><span className="stat-val">{gameResult?.counts?.miss || 0}</span></div>
+              </div>
 
-            {/* Judgment Statistics Counter */}
-            <div className="result-stats-grid">
-              <div className="stat-item"><span className="stat-label cyan">PERFECT</span><span className="stat-val">{gameResult?.counts?.perfect || 0}</span></div>
-              <div className="stat-item"><span className="stat-label green">GREAT</span><span className="stat-val">{gameResult?.counts?.great || 0}</span></div>
-              <div className="stat-item"><span className="stat-label yellow">GOOD</span><span className="stat-val">{gameResult?.counts?.good || 0}</span></div>
-              <div className="stat-item"><span className="stat-label magenta">MISS</span><span className="stat-val">{gameResult?.counts?.miss || 0}</span></div>
-            </div>
+              <div className="result-maxcombo-row">
+                MAX COMBO: <span>{maxCombo}</span>
+              </div>
 
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              MAX COMBO: <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{maxCombo}</span>
+              <div className="result-action-buttons">
+                <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
+                  PLAY AGAIN
+                </button>
+                
+                {isFromEditor ? (
+                  <button 
+                    className="button-neon editor-btn" 
+                    onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('EDITOR'); }}
+                  >
+                    BACK TO EDITOR
+                  </button>
+                ) : (
+                  <button 
+                    className="button-neon select-btn" 
+                    onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
+                  >
+                    SONG SELECT
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
-              PLAY AGAIN
-            </button>
-            
-            {isFromEditor ? (
-              <button 
-                className="button-neon" 
-                style={{ borderColor: 'var(--neon-cyan)', boxShadow: '0 0 15px var(--neon-cyan-glow)' }}
-                onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('EDITOR'); }}
-              >
-                BACK TO EDITOR
-              </button>
-            ) : (
-              <button 
-                className="button-neon" 
-                style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
-                onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
-              >
-                SONG SELECT
-              </button>
-            )}
           </div>
         </div>
       )}
