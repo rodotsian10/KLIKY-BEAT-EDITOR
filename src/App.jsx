@@ -649,6 +649,8 @@ function App() {
           noteSpeed={noteSpeed}
           setNoteSpeed={setNoteSpeed}
           debugMode={debugMode}
+          isAutoPlay={isAutoPlay}
+          setIsAutoPlay={setIsAutoPlay}
           onBack={() => setGameState('PLAYLIST')}
           onPlay={loadSongAssets}
           playKeycapSound={playKeycapSound}

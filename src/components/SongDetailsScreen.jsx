@@ -6,6 +6,8 @@ function SongDetailsScreen({
   noteSpeed, 
   setNoteSpeed, 
   debugMode,
+  isAutoPlay,
+  setIsAutoPlay,
   onBack, 
   onPlay,
   playKeycapSound
@@ -26,55 +28,52 @@ function SongDetailsScreen({
         throw new Error('데이터가 배열 형식이 아닙니다.');
       }
 
-      const tempSong = { ...song, chart: parsedChart };
-      if (playKeycapSound) playKeycapSound();
-      onPlay(tempSong);
+      onPlay({
+        ...song,
+        chart: parsedChart
+      });
     } catch (e) {
-      alert(`채보 파싱 실패: ${e.message}\n에디터에서 복사한 배열이 맞는지 확인해 주세요.`);
+      alert('채보 JSON 형식 오류: ' + e.message);
     }
   };
 
   return (
     <div className="song-details-screen">
       <header className="details-header">
-        <button className="back-btn" onClick={() => { if(playKeycapSound) playKeycapSound(); onBack(); }}>
-          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-          BACK
+        <button className="button-neon details-back-btn" onClick={onBack}>
+          ← BACK
         </button>
+        <h2 className="details-title">{song.title}</h2>
       </header>
 
-      {/* Landscape: left column = vinyl, right column = info+buttons */}
-      <div className="details-layout">
-        {/* Left: Vinyl */}
-        <div className="details-left">
-          <div className="vinyl-record-container">
-            <div className="vinyl-disc playing">
-              <div className="vinyl-center-art"></div>
+      <div className="details-body">
+        {/* Left Column: Rotating Vinyl Record & Visual */}
+        <div className="details-left-panel">
+          <div className="vinyl-wrapper">
+            <div className="vinyl-record">
+              <div className="vinyl-grooves"></div>
+              <div className="vinyl-label" style={{ background: song.coverColor }}>
+                <span className="vinyl-title">{song.title}</span>
+                <span className="vinyl-artist">{song.artist}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Info + Controls */}
-        <div className="details-right">
-          <h2 className="details-title-txt">{song.title}</h2>
-          <p className="details-artist-txt">{song.artist}</p>
-
-          <div className="details-info-row">
-            <div className="details-badge">
-              <span>SPEED</span>
-              <span className="details-badge-val">{noteSpeed.toFixed(1)}x</span>
+        {/* Right Column: Controls, Speed, Play & Debug Chart Box */}
+        <div className="details-right-panel">
+          <div className="details-meta-card">
+            <div className="meta-row">
+              <span className="meta-label">ARTIST</span>
+              <span className="meta-val">{song.artist}</span>
             </div>
-            <div className="details-badge">
-              <span>BPM</span>
-              <span className="details-badge-val">{song.bpm}</span>
+            <div className="meta-row">
+              <span className="meta-label">BPM</span>
+              <span className="meta-val">{song.bpm}</span>
             </div>
-            <div className="details-badge">
-              <span>DIFF</span>
-              <span className="details-badge-val" style={{ color: song.difficulty === 'HARD' ? 'var(--neon-magenta)' : 'var(--neon-green)' }}>
-                {song.difficulty}
-              </span>
+            <div className="meta-row">
+              <span className="meta-label">CHARTER</span>
+              <span className="meta-val">{song.charter || 'SYSTEM'}</span>
             </div>
           </div>
 
@@ -92,12 +91,26 @@ function SongDetailsScreen({
             <span className="setting-value">{noteSpeed.toFixed(1)}x</span>
           </div>
 
-          <button 
-            className="button-neon details-play-btn"
-            onClick={() => { if (playKeycapSound) playKeycapSound(); onPlay(song); }}
-          >
-            PLAY NOW
-          </button>
+          <div className="details-play-row">
+            <button 
+              className="button-neon details-play-btn"
+              onClick={() => { if (playKeycapSound) playKeycapSound(); onPlay(song); }}
+            >
+              PLAY NOW
+            </button>
+
+            {debugMode && (
+              <button
+                className={`details-auto-btn ${isAutoPlay ? 'active' : ''}`}
+                onClick={() => {
+                  if (playKeycapSound) playKeycapSound();
+                  setIsAutoPlay(!isAutoPlay);
+                }}
+              >
+                🤖 AUTO {isAutoPlay ? 'ON' : 'OFF'}
+              </button>
+            )}
+          </div>
 
           {/* ====================================================== */}
           {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST (Conditioned by debugMode) */}
