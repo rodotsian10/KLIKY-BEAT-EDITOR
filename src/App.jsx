@@ -3,6 +3,7 @@ import IntroScreen from './components/IntroScreen';
 import PlaylistScreen from './components/PlaylistScreen';
 import SongDetailsScreen from './components/SongDetailsScreen';
 import GamePlayScreen from './components/GamePlayScreen';
+import ChartEditorScreen from './components/ChartEditorScreen';
 import SettingsModal from './components/SettingsModal';
 import './App.css';
 
@@ -666,7 +667,22 @@ function App() {
           setIsAutoPlay={setIsAutoPlay}
           onBack={() => setGameState('PLAYLIST')}
           onPlay={loadSongAssets}
+          onOpenEditor={() => setGameState('EDITOR')}
           playKeycapSound={playKeycapSound}
+        />
+      )}
+
+      {/* 3.5 CHART EDITOR SCREEN */}
+      {gameState === 'EDITOR' && (
+        <ChartEditorScreen 
+          songs={SONGS}
+          audioCtx={audioCtxRef.current}
+          sfxBuffers={sfxBuffersRef.current}
+          playKeycapSound={playKeycapSound}
+          onBack={() => setGameState('PLAYLIST')}
+          onTestPlay={(testSong) => {
+            loadSongAssets(testSong);
+          }}
         />
       )}
 
