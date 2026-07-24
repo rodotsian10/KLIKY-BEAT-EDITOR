@@ -1,0 +1,10 @@
+# Antigravity AI Assistant Ignore Rules
+node_modules/
+dist/
+android/app/build/
+android/.gradle/
+android/build/
+android/captures/
+.gemini/
+*.apk
+*.log
