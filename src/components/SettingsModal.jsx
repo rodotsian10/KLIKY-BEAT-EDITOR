@@ -15,6 +15,8 @@ function SettingsModal({
   setDebugMode,
   isAutoPlay,
   setIsAutoPlay,
+  onResetHighscores,
+  onOpenEditor,
   onClose,
   playKeycapSound 
 }) {
@@ -71,9 +73,26 @@ function SettingsModal({
                 setDebugMode(!debugMode);
               }}
             >
-              {debugMode ? 'ON' : 'OFF'}
+              {debugMode ? 'ON (채보 에디터 켜짐)' : 'OFF (기본 모드)'}
             </button>
           </div>
+
+          {debugMode && (
+            <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+              <span className="setting-label">🎛️ CHART STUDIO:</span>
+              <button 
+                className="debug-toggle-btn active"
+                style={{ background: 'var(--neon-magenta)', borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
+                onClick={() => {
+                  if (playKeycapSound) playKeycapSound();
+                  onClose();
+                  if (onOpenEditor) onOpenEditor();
+                }}
+              >
+                OPEN CHART STUDIO
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Key Label Customization */}

@@ -846,6 +846,7 @@ function App() {
           isAutoPlay={isAutoPlay}
           setIsAutoPlay={setIsAutoPlay}
           onResetHighscores={handleResetHighscores}
+          onOpenEditor={() => setGameState('EDITOR')}
           onClose={() => setShowSettings(false)}
           playKeycapSound={playKeycapSound}
         />

@@ -104,28 +104,15 @@ function SongDetailsScreen({
             </button>
 
             {debugMode && (
-              <>
-                <button
-                  className={`details-auto-btn ${isAutoPlay ? 'active' : ''}`}
-                  onClick={() => {
-                    if (playKeycapSound) playKeycapSound();
-                    setIsAutoPlay(!isAutoPlay);
-                  }}
-                >
-                  🤖 AUTO {isAutoPlay ? 'ON' : 'OFF'}
-                </button>
-
-                <button
-                  className="details-auto-btn"
-                  style={{ borderColor: 'var(--neon-magenta)', color: 'var(--neon-magenta)' }}
-                  onClick={() => {
-                    if (playKeycapSound) playKeycapSound();
-                    if (onOpenEditor) onOpenEditor();
-                  }}
-                >
-                  🎛️ STUDIO
-                </button>
-              </>
+              <button
+                className={`details-auto-btn ${isAutoPlay ? 'active' : ''}`}
+                onClick={() => {
+                  if (playKeycapSound) playKeycapSound();
+                  setIsAutoPlay(!isAutoPlay);
+                }}
+              >
+                🤖 AUTO {isAutoPlay ? 'ON' : 'OFF'}
+              </button>
             )}
           </div>
 

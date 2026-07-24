@@ -11,15 +11,15 @@ function ChartEditorScreen({
 }) {
   const [selectedSongId, setSelectedSongId] = useState(songs[0]?.id || 'my-heart');
   const [currentSong, setCurrentSong] = useState(songs[0]);
-  const [noteSpeed, setNoteSpeed] = useState(4.0);
   const [bpm, setBpm] = useState(songs[0]?.bpm || 140);
+  const [zoomLevel, setZoomLevel] = useState(240); // 1 beat = 240px (wide spacing)
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [customAudioUrl, setCustomAudioUrl] = useState(null);
 
-  // Chart Notes Array
+  // Chart Notes State
   const [notes, setNotes] = useState(songs[0]?.chart || [
     { beat: 1.00, lane: 0, type: 'hold', durationBeats: 2.00 },
     { beat: 3.00, lane: 2, type: 'short' },
@@ -30,11 +30,13 @@ function ChartEditorScreen({
   const [jsonText, setJsonText] = useState('');
   const audioRef = useRef(null);
   const activeHoldsRef = useRef({});
+  const trackScrollRef = useRef(null);
 
   const laneKeys = ['KeyD', 'KeyF', 'KeyJ', 'KeyK'];
+  const laneNames = ['D (Lane 1)', 'F (Lane 2)', 'J (Lane 3)', 'K (Lane 4)'];
   const laneColors = ['#00ffff', '#ff007f', '#ffff00', '#39ff14'];
 
-  // Handle song selection change
+  // Sync selected song change
   useEffect(() => {
     const song = songs.find(s => s.id === selectedSongId) || songs[0];
     setCurrentSong(song);
@@ -44,18 +46,15 @@ function ChartEditorScreen({
     }
   }, [selectedSongId, songs]);
 
-  // Load and Decrypt Audio Buffer for Web Audio
+  // Audio decryption & Web Audio player loading
   useEffect(() => {
     const loadAudioTrack = async () => {
       if (!currentSong) return;
       try {
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
+        if (audioRef.current) audioRef.current.pause();
 
         let audioUrl = currentSong.path;
 
-        // Decrypt if encrypted track (e.g. Canon in Harp)
         if (currentSong.encrypted) {
           const res = await fetch(encodeURI(currentSong.path));
           if (!res.ok) throw new Error('Encrypted track fetch failed');
@@ -95,29 +94,21 @@ function ChartEditorScreen({
     loadAudioTrack();
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
+      if (audioRef.current) audioRef.current.pause();
     };
   }, [currentSong, customAudioUrl]);
 
-  // Handle Custom MP3 Upload
-  const handleCustomAudioUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setCustomAudioUrl(url);
-      setCurrentSong({
-        id: 'custom-user-track',
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        artist: 'User Track',
-        path: url,
-        bpm: bpm
-      });
+  // Sync scroll positioning Top-to-Bottom as music plays
+  useEffect(() => {
+    if (trackScrollRef.current) {
+      const secondsPerBeat = 60 / bpm;
+      const currentBeat = currentTime / secondsPerBeat;
+      const targetTop = currentBeat * zoomLevel - 160;
+      trackScrollRef.current.scrollTop = Math.max(0, targetTop);
     }
-  };
+  }, [currentTime, bpm, zoomLevel]);
 
-  // Playback Toggle
+  // Audio Play / Pause Toggle
   const togglePlay = () => {
     if (!audioRef.current) return;
     if (audioRef.current.paused) {
@@ -129,7 +120,7 @@ function ChartEditorScreen({
     }
   };
 
-  // Arrow Key Navigation (← / → 1 second scrubbing without glitching)
+  // Keyboard Shortcuts (Scrubbing with ← / → & Live Tap Recording)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
@@ -163,7 +154,6 @@ function ChartEditorScreen({
         if (isRecording) {
           activeHoldsRef.current[laneIdx] = currentBeat;
         } else {
-          // Tap to insert short note
           setNotes(prev => {
             const next = [...prev, {
               beat: parseFloat(currentBeat.toFixed(2)),
@@ -186,7 +176,7 @@ function ChartEditorScreen({
 
         setNotes(prev => {
           const next = [...prev];
-          if (duration > 0.2) {
+          if (duration > 0.25) {
             next.push({
               beat: parseFloat(startBeat.toFixed(2)),
               lane: laneIdx,
@@ -216,7 +206,24 @@ function ChartEditorScreen({
     };
   }, [bpm, isRecording, playKeycapSound, currentTime]);
 
-  // Export JSON
+  // Click on Track Grid Lane to add/remove note manually
+  const handleTrackLaneClick = (laneIdx, e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickY = e.clientY - rect.top + trackScrollRef.current.scrollTop;
+    const clickedBeat = parseFloat((clickY / zoomLevel).toFixed(2));
+
+    setNotes(prev => {
+      const next = [...prev, { beat: clickedBeat, lane: laneIdx, type: 'short' }];
+      return next.sort((a, b) => a.beat - b.beat);
+    });
+  };
+
+  const deleteNote = (idx, e) => {
+    if (e) e.stopPropagation();
+    setNotes(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // JSON Import & Export
   const handleExportJson = () => {
     const sorted = [...notes].sort((a, b) => a.beat - b.beat);
     const formatted = sorted.map(n => {
@@ -229,7 +236,7 @@ function ChartEditorScreen({
   };
 
   const handleCopyJson = () => {
-    if (!jsonText) return alert('먼저 EXPORT JSON을 클릭해 주세요!');
+    if (!jsonText) return alert('먼저 EXPORT 버튼을 눌러주세요!');
     navigator.clipboard.writeText(jsonText).then(() => alert('클립보드에 채보 JSON이 복사되었습니다!'));
   };
 
@@ -246,48 +253,42 @@ function ChartEditorScreen({
     }
   };
 
-  const deleteNote = (idx) => {
-    setNotes(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  // Launch In-Game Test Play
   const handleStartInGameTest = () => {
     if (audioRef.current) audioRef.current.pause();
     setIsPlaying(false);
 
-    const testSong = {
+    onTestPlay({
       ...currentSong,
       bpm: bpm,
       chart: notes
-    };
-
-    onTestPlay(testSong);
+    });
   };
 
   const secondsPerBeat = 60 / bpm;
   const currentBeat = currentTime / secondsPerBeat;
+  const totalBeats = 160;
 
   return (
     <div className="chart-editor-screen">
-      {/* HEADER BAR */}
+      {/* HEADER TOOLBAR */}
       <header className="editor-header">
         <button className="button-neon editor-back-btn" onClick={onBack}>
-          ← EXIT EDITOR
+          ← EXIT
         </button>
-        <h2 className="editor-title">🎛️ KLIKY-BEAT CHART STUDIO</h2>
+        <h2 className="editor-title">🎛️ KLIKY-BEAT 4-LANE STUDIO</h2>
         
         <button className="button-neon editor-test-btn" onClick={handleStartInGameTest}>
           🎮 TEST PLAY IN-GAME
         </button>
       </header>
 
-      {/* EDITOR BODY 3-PANEL LAYOUT */}
+      {/* MAIN STUDIO BODY */}
       <div className="editor-body-layout">
         
-        {/* LEFT PANEL: AUDIO & RECORD CONTROLS */}
+        {/* LEFT CONTROL PANEL */}
         <div className="editor-left-panel">
           <div className="editor-card">
-            <div className="card-title">🎵 SELECT TRACK SOURCE</div>
+            <div className="card-title">🎵 SELECT SONG TRACK</div>
             <select 
               className="editor-select" 
               value={selectedSongId}
@@ -297,20 +298,10 @@ function ChartEditorScreen({
                 <option key={s.id} value={s.id}>{s.title} ({s.artist})</option>
               ))}
             </select>
-
-            <div style={{ marginTop: '10px' }}>
-              <label className="editor-label">📁 Custom MP3/WAV Upload:</label>
-              <input 
-                type="file" 
-                accept="audio/*"
-                onChange={handleCustomAudioUpload}
-                className="editor-file-input"
-              />
-            </div>
           </div>
 
           <div className="editor-card">
-            <div className="card-title">🎙️ LIVE TAP RECORD & PLAY</div>
+            <div className="card-title">🎙️ RECORD & PLAYBACK</div>
             <button 
               className={`record-toggle-btn ${isRecording ? 'recording' : ''}`}
               onClick={() => setIsRecording(!isRecording)}
@@ -325,7 +316,7 @@ function ChartEditorScreen({
             </div>
 
             <div className="meta-info-row">
-              <span>TEMPO:</span>
+              <span>SPEED:</span>
               <select 
                 value={playbackRate} 
                 onChange={(e) => {
@@ -338,14 +329,25 @@ function ChartEditorScreen({
                 <option value={0.5}>0.5x Slow</option>
                 <option value={0.75}>0.75x</option>
                 <option value={1.0}>1.0x Normal</option>
-                <option value={1.25}>1.25x</option>
               </select>
             </div>
           </div>
 
           <div className="editor-card">
-            <div className="card-title">⚙️ BPM CONFIG</div>
+            <div className="card-title">🔍 GRID SPACING (ZOOM)</div>
             <div className="meta-info-row">
+              <span>BEAT HEIGHT:</span>
+              <select 
+                value={zoomLevel} 
+                onChange={(e) => setZoomLevel(parseInt(e.target.value))}
+                className="editor-select-sm"
+              >
+                <option value={160}>160px (Standard)</option>
+                <option value={240}>240px (Wide)</option>
+                <option value={320}>320px (Ultra Wide)</option>
+              </select>
+            </div>
+            <div className="meta-info-row" style={{ marginTop: '6px' }}>
               <span>BPM:</span>
               <input 
                 type="number" 
@@ -372,77 +374,111 @@ function ChartEditorScreen({
               className="editor-json-textarea"
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
-              placeholder="JSON 데이터를 입력하거나 EXPORT 버튼을 누르세요..."
+              placeholder="JSON 붙여넣기 또는 EXPORT..."
             />
-            <button className="button-neon" onClick={handleImportJson} style={{ marginTop: '8px', width: '100%' }}>
+            <button className="button-neon" onClick={handleImportJson} style={{ marginTop: '6px', width: '100%' }}>
               LOAD JSON TO CHART
             </button>
           </div>
         </div>
 
-        {/* CENTER PANEL: VISUAL NOTE GRID & PLAYHEAD */}
+        {/* CENTER MAIN: LARGE 4-LANE TOP-TO-BOTTOM TIMELINE TRACK */}
         <div className="editor-center-panel">
           <div className="editor-time-banner">
             TIME: <span className="cyan">{currentTime.toFixed(2)}s</span>
             <span style={{ margin: '0 12px' }}>|</span>
             BEAT: <span className="yellow">{currentBeat.toFixed(2)}b</span>
-            <span className="shortcut-hint">⌨️ [Space] Play/Pause | [←/→] ±1s Scrubbing | [D/F/J/K] Tap</span>
+            <span className="shortcut-hint">⌨️ [Space] Play/Pause | [←/→] ±1s Scrubbing | Click Track to Add Note</span>
           </div>
 
-          <div className="grid-lane-container">
-            <div className="grid-track">
-              {/* 4 Lanes Divider */}
-              <div className="lane-line lane-1" />
-              <div className="lane-line lane-2" />
-              <div className="lane-line lane-3" />
-
-              {/* Playhead Indicator */}
+          {/* 4 LARGE LANES TOP-TO-BOTTOM TRACK CONTAINER */}
+          <div className="large-track-container" ref={trackScrollRef}>
+            <div 
+              className="large-track-grid"
+              style={{ height: `${totalBeats * zoomLevel}px` }}
+            >
+              {/* Top-to-Bottom Current Time Playhead Bar */}
               <div 
-                className="playhead-indicator"
-                style={{ bottom: `${(currentBeat % 16) * 32}px` }}
-              />
+                className="top-playhead-bar"
+                style={{ top: `${currentBeat * zoomLevel}px` }}
+              >
+                <div className="playhead-tag">NOW {currentBeat.toFixed(2)}b</div>
+              </div>
 
-              {/* Render Notes */}
-              {notes.map((note, i) => {
-                const bottomPx = ((note.beat % 16) * 32);
-                const leftPx = note.lane * 65 + 8;
+              {/* Beat Divider Lines (0 ~ 160 Beats Top-to-Bottom) */}
+              {Array.from({ length: totalBeats * 2 }).map((_, i) => {
+                const beatVal = i * 0.5;
+                const topPx = beatVal * zoomLevel;
+                const isMainBeat = beatVal % 1 === 0;
+
+                return (
+                  <div 
+                    key={i} 
+                    className={`track-beat-line ${isMainBeat ? 'main-beat' : ''}`}
+                    style={{ top: `${topPx}px` }}
+                  >
+                    {isMainBeat && <span className="beat-num">BEAT {beatVal}</span>}
+                  </div>
+                );
+              })}
+
+              {/* 4 Wide Column Lanes */}
+              {[0, 1, 2, 3].map(laneIdx => (
+                <div 
+                  key={laneIdx} 
+                  className={`large-track-lane lane-${laneIdx}`}
+                  onClick={(e) => handleTrackLaneClick(laneIdx, e)}
+                >
+                  <div className="lane-header-label" style={{ color: laneColors[laneIdx] }}>
+                    {laneNames[laneIdx]}
+                  </div>
+                </div>
+              ))}
+
+              {/* Render Notes (Top-to-Bottom Spacing) */}
+              {notes.map((note, idx) => {
+                const topPx = note.beat * zoomLevel;
+                const leftPx = note.lane * 130 + 10;
                 const color = laneColors[note.lane];
 
                 return (
-                  <React.Fragment key={i}>
+                  <React.Fragment key={idx}>
                     {note.type === 'hold' && (
                       <div 
-                        className="grid-hold-ribbon"
+                        className="large-hold-ribbon"
                         style={{
-                          bottom: `${bottomPx}px`,
-                          height: `${(note.durationBeats || 1) * 32}px`,
-                          left: `${note.lane * 65 + 28}px`,
+                          top: `${topPx}px`,
+                          height: `${(note.durationBeats || 1) * zoomLevel}px`,
+                          left: `${note.lane * 130 + 55}px`,
                           background: color,
-                          boxShadow: `0 0 10px ${color}`
+                          boxShadow: `0 0 14px ${color}`
                         }}
                       />
                     )}
                     <div 
-                      className="grid-note-block"
+                      className="large-note-block"
                       style={{
-                        bottom: `${bottomPx}px`,
+                        top: `${topPx}px`,
                         left: `${leftPx}px`,
                         background: color,
-                        boxShadow: `0 0 10px ${color}`
+                        boxShadow: `0 0 16px ${color}`
                       }}
-                      onClick={() => deleteNote(i)}
-                      title={`Beat ${note.beat} (Lane ${note.lane + 1}) - Click to delete`}
-                    />
+                      onClick={(e) => deleteNote(idx, e)}
+                      title={`Beat ${note.beat} (Lane ${note.lane + 1}) - Click to Delete`}
+                    >
+                      <span className="note-text-label">B {note.beat.toFixed(2)}</span>
+                    </div>
                   </React.Fragment>
                 );
               })}
+
             </div>
           </div>
         </div>
 
-        {/* RIGHT PANEL: VERTICAL TIMELINE INSPECTION ROLL */}
+        {/* RIGHT PANEL: VERTICAL TIMELINE INSPECTION LIST */}
         <div className="editor-right-panel">
-          <div className="card-title">📜 VERTICAL TIMELINE ({notes.length} NOTES)</div>
+          <div className="card-title">📜 NOTE LIST ({notes.length} NOTES)</div>
           <div className="inspector-scroll-list">
             {notes.map((note, idx) => (
               <div 
@@ -453,13 +489,13 @@ function ChartEditorScreen({
                 <div>
                   <span className="beat-badge">B {note.beat.toFixed(2)}</span>
                   <span className="lane-badge" style={{ color: laneColors[note.lane] }}>
-                    Lane {note.lane + 1}
+                    L{note.lane + 1}
                   </span>
                   <span className="type-badge">
                     {note.type.toUpperCase()}{note.durationBeats ? ` (${note.durationBeats}b)` : ''}
                   </span>
                 </div>
-                <button className="inspector-del-btn" onClick={() => deleteNote(idx)}>
+                <button className="inspector-del-btn" onClick={(e) => deleteNote(idx, e)}>
                   ✖
                 </button>
               </div>
