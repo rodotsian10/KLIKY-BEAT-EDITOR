@@ -443,6 +443,9 @@ function App() {
   const [sfxVolume, setSfxVolume] = useState(0.8);
   const [keyLabels, setKeyLabels] = useState(['D', 'F', 'J', 'K']);
   const [debugMode, setDebugMode] = useState(false);
+  const [isAutoPlay, setIsAutoPlay] = useState(false);
+  const [isCustomChart, setIsCustomChart] = useState(false);
+  const [gameResult, setGameResult] = useState(null);
   const [loadProgress, setLoadProgress] = useState(0);
 
   // Audio Cache Refs
@@ -521,16 +524,40 @@ function App() {
     audioCtxRef.current = new AudioContextClass();
   };
 
+  const calculateTier = (judgmentCounts, accuracy) => {
+    const { perfect, great, good, miss } = judgmentCounts || { perfect: 0, great: 0, good: 0, miss: 0 };
+    const totalHits = perfect + great + good + miss;
+    
+    if (totalHits > 0 && miss === 0 && great === 0 && good === 0 && perfect > 0) {
+      return { name: 'SSS', label: 'ALL PERFECT', color: '#ff007f', glow: 'rgba(255, 0, 127, 0.8)' };
+    }
+    if (accuracy >= 98) {
+      return { name: 'SS', label: 'SUPERB', color: '#ff66cc', glow: 'rgba(255, 102, 204, 0.8)' };
+    }
+    if (accuracy >= 95) {
+      return { name: 'S', label: 'EXCELLENT', color: '#ffd700', glow: 'rgba(255, 215, 0, 0.8)' };
+    }
+    if (accuracy >= 85) {
+      return { name: 'A', label: 'GREAT', color: '#e0e0e0', glow: 'rgba(224, 224, 224, 0.8)' };
+    }
+    if (accuracy >= 70) {
+      return { name: 'B', label: 'GOOD', color: '#cd7f32', glow: 'rgba(205, 127, 50, 0.8)' };
+    }
+    if (accuracy >= 55) {
+      return { name: 'C', label: 'CLEAR', color: '#008cff', glow: 'rgba(0, 140, 255, 0.8)' };
+    }
+    return { name: 'F', label: 'FAILED', color: '#ff3333', glow: 'rgba(255, 51, 51, 0.8)' };
+  };
+
   // Preload audio assets
   const loadSongAssets = async (song) => {
     setupAudioContext();
     const ctx = audioCtxRef.current;
     
-    // Sync the active song state with the custom chart data passed from testing
-    setSelectedSong(song);
-    
     setGameState('LOADING');
     setLoadProgress(10);
+    setSelectedSong(song);
+    setIsCustomChart(!!song.chart);
 
     try {
       // Check cache for BGM
@@ -655,16 +682,37 @@ function App() {
           bgmBuffer={bgmBufferRef.current}
           sfxBuffers={sfxBuffersRef.current}
           keyLabels={keyLabels}
+          isAutoPlay={isAutoPlay}
+          isCustomChart={isCustomChart}
           playKeycapSound={playKeycapSound}
-          onGameOver={(finalScore, finalMaxCombo) => {
+          onGameOver={(finalScore, finalMaxCombo, judgmentCounts, totalNotes) => {
             setScore(finalScore);
             setMaxCombo(finalMaxCombo);
             
-            // Save local highscore if needed
-            const currentHigh = songHighScores[selectedSong.id] || 0;
-            if (finalScore > currentHigh) {
-              localStorage.setItem(selectedSong.highScoreKey, finalScore.toString());
+            const counts = judgmentCounts || { perfect: 0, great: 0, good: 0, miss: 0 };
+            const totalHits = counts.perfect + counts.great + counts.good + counts.miss;
+            const accuracy = totalHits > 0 
+              ? Math.min(100, Math.max(0, ((counts.perfect * 100 + counts.great * 80 + counts.good * 50) / (totalHits * 100)) * 100))
+              : 0;
+
+            const tier = calculateTier(counts, accuracy);
+            const isUnranked = isAutoPlay || isCustomChart;
+
+            // Security Rule: Only save high score if NOT unranked (No AutoPlay & No Custom Chart)
+            if (!isUnranked) {
+              const currentHigh = songHighScores[selectedSong.id] || 0;
+              if (finalScore > currentHigh) {
+                localStorage.setItem(selectedSong.highScoreKey, finalScore.toString());
+                setSongHighScores(prev => ({ ...prev, [selectedSong.id]: finalScore }));
+              }
             }
+
+            setGameResult({
+              counts,
+              accuracy: accuracy.toFixed(1),
+              tier,
+              isUnranked
+            });
 
             setGameState('GAME_OVER');
           }}
@@ -672,30 +720,63 @@ function App() {
         />
       )}
 
-      {/* 6. GAME OVER SCREEN */}
+      {/* 6. GAME OVER / RESULT SCREEN */}
       {gameState === 'GAME_OVER' && (
         <div className="overlay-screen">
-          <h1 className="menu-title" style={{ color: 'var(--neon-green)' }}>FINISH!</h1>
+          <h1 className="menu-title" style={{ color: gameResult?.tier?.color || 'var(--neon-green)', textShadow: `0 0 20px ${gameResult?.tier?.glow}` }}>
+            {gameResult?.tier?.label || 'FINISH!'}
+          </h1>
           
-          <div style={{ margin: '30px 0', fontSize: '1.4rem' }}>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '8px' }}>
+          <div style={{ margin: '15px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            {/* Tier Badge */}
+            <div className="result-tier-badge" style={{ borderColor: gameResult?.tier?.color, color: gameResult?.tier?.color, boxShadow: `0 0 25px ${gameResult?.tier?.glow}` }}>
+              {gameResult?.tier?.name || 'CLEAR'}
+            </div>
+
+            {/* Unranked Warning Badge */}
+            {gameResult?.isUnranked && (
+              <div className="unranked-badge">
+                ⚠️ UNRANKED (오토/커스텀 플레이로 기록 미반영)
+              </div>
+            )}
+
+            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '6px' }}>
               {selectedSong.title}
             </div>
-            <div>SCORE: <span style={{ color: '#fff', fontWeight: 'bold' }}>{score}</span></div>
-            <div>MAX COMBO: <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{maxCombo}</span></div>
+
+            <div style={{ fontSize: '1.2rem', margin: '4px 0' }}>
+              SCORE: <span style={{ color: '#fff', fontWeight: 'bold', fontFamily: 'var(--font-mono)' }}>{score}</span>
+              <span style={{ marginLeft: '16px', color: 'var(--neon-cyan)', fontSize: '1rem', fontFamily: 'var(--font-mono)' }}>
+                ACC: {gameResult?.accuracy}%
+              </span>
+            </div>
+
+            {/* Judgment Statistics Counter */}
+            <div className="result-stats-grid">
+              <div className="stat-item"><span className="stat-label cyan">PERFECT</span><span className="stat-val">{gameResult?.counts?.perfect || 0}</span></div>
+              <div className="stat-item"><span className="stat-label green">GREAT</span><span className="stat-val">{gameResult?.counts?.great || 0}</span></div>
+              <div className="stat-item"><span className="stat-label yellow">GOOD</span><span className="stat-val">{gameResult?.counts?.good || 0}</span></div>
+              <div className="stat-item"><span className="stat-label magenta">MISS</span><span className="stat-val">{gameResult?.counts?.miss || 0}</span></div>
+            </div>
+
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              MAX COMBO: <span style={{ color: '#00ffff', fontWeight: 'bold' }}>{maxCombo}</span>
+            </div>
           </div>
 
-          <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
-            PLAY AGAIN
-          </button>
-          
-          <button 
-            className="button-neon" 
-            style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
-            onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
-          >
-            SONG SELECT
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="button-neon" onClick={() => { if (playKeycapSound) playKeycapSound(); loadSongAssets(selectedSong); }}>
+              PLAY AGAIN
+            </button>
+            
+            <button 
+              className="button-neon" 
+              style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
+              onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
+            >
+              SONG SELECT
+            </button>
+          </div>
         </div>
       )}
 
@@ -710,6 +791,8 @@ function App() {
           setKeyLabels={setKeyLabels}
           debugMode={debugMode}
           setDebugMode={setDebugMode}
+          isAutoPlay={isAutoPlay}
+          setIsAutoPlay={setIsAutoPlay}
           onResetHighscores={handleResetHighscores}
           onClose={() => setShowSettings(false)}
           playKeycapSound={playKeycapSound}

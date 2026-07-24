@@ -28,6 +28,8 @@ function GamePlayScreen({
   bgmBuffer, 
   sfxBuffers, 
   keyLabels,
+  isAutoPlay,
+  isCustomChart,
   playKeycapSound,
   onGameOver,
   onQuit 
@@ -43,6 +45,9 @@ function GamePlayScreen({
   const [lastJudgment, setLastJudgment] = useState({ text: '', type: '', key: 0 });
   const [isPaused, setIsPaused] = useState(false);
   const [countdown, setCountdown] = useState(null);
+
+  const judgmentCountsRef = useRef({ perfect: 0, great: 0, good: 0, miss: 0 });
+  const lastHapticTimeRef = useRef(0);
 
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -387,6 +392,7 @@ function GamePlayScreen({
         setScore(prev => prev + scoreAdd);
         setCombo(prev => prev + 1);
         setLastJudgment({ text: judgeText, type: judgeType, key: Date.now() });
+        judgmentCountsRef.current[judgeType] += 1;
         spawnParticles(lane, KEY_DETAILS[lane].neon);
       }
     }
@@ -427,6 +433,7 @@ function GamePlayScreen({
       setScore(prev => prev + scoreAdd);
       setCombo(prev => prev + 1);
       setLastJudgment({ text: judgeText, type: judgeType, key: Date.now() });
+      judgmentCountsRef.current[judgeType] += 1;
       spawnParticles(lane, KEY_DETAILS[lane].neon, 15);
     } else {
       activeHold.miss = true;
@@ -680,14 +687,14 @@ function GamePlayScreen({
         }
         setTimeout(() => {
           isPlayingRef.current = false;
-          onGameOver(scoreRef.current, maxComboRef.current);
+          onGameOver(scoreRef.current, maxComboRef.current, judgmentCountsRef.current, notesRef.current.length);
         }, 2000);
       }
     }
 
     if (bgmBuffer && elapsedTime >= bgmBuffer.duration) {
       isPlayingRef.current = false;
-      onGameOver(score, maxCombo);
+      onGameOver(scoreRef.current, maxComboRef.current, judgmentCountsRef.current, notesRef.current.length);
       return;
     }
 
@@ -813,19 +820,50 @@ function GamePlayScreen({
       }
     });
 
-    // 6. Draw falling notes
+    // 6. Draw falling notes & process AutoPlay / Miss / Hold Haptics
     notes.forEach((note) => {
+      // AUTO PLAY Logic: System auto-hits notes with PERFECT accuracy if enabled
+      if (isAutoPlay) {
+        if (note.type === 'short' && !note.hit && !note.miss && elapsedTime >= note.time) {
+          note.hit = true;
+          setScore(prev => prev + 100);
+          setCombo(prev => prev + 1);
+          setLastJudgment({ text: 'PERFECT', type: 'perfect', key: Date.now() });
+          judgmentCountsRef.current.perfect += 1;
+          spawnParticles(note.lane, KEY_DETAILS[note.lane].neon);
+        } else if (note.type === 'hold') {
+          if (!note.hitStart && !note.miss && elapsedTime >= note.time) {
+            note.hitStart = true;
+            note.active = true;
+            spawnParticles(note.lane, KEY_DETAILS[note.lane].neon, 6);
+          }
+          if (note.active && !note.hitEnd && elapsedTime >= note.time + note.duration) {
+            note.active = false;
+            note.hitEnd = true;
+            note.hit = true;
+            setScore(prev => prev + 100);
+            setCombo(prev => prev + 1);
+            setLastJudgment({ text: 'PERFECT', type: 'perfect', key: Date.now() });
+            judgmentCountsRef.current.perfect += 1;
+            spawnParticles(note.lane, KEY_DETAILS[note.lane].neon, 15);
+          }
+        }
+      }
+
+      // Standard Miss Logic (when not auto-play or timing passed)
       if (note.type === 'short') {
         if (!note.hit && !note.miss && elapsedTime - note.time > 0.22) {
           note.miss = true;
           setCombo(0);
           setLastJudgment({ text: 'MISS', type: 'miss', key: Date.now() });
+          judgmentCountsRef.current.miss += 1;
         }
       } else {
         if (!note.hitStart && !note.miss && elapsedTime - note.time > 0.22) {
           note.miss = true;
           setCombo(0);
           setLastJudgment({ text: 'MISS', type: 'miss', key: Date.now() });
+          judgmentCountsRef.current.miss += 1;
         }
         const endTime = note.time + note.duration;
         if (note.hitStart && !note.hitEnd && !note.miss && elapsedTime - endTime > 0.22) {
@@ -833,6 +871,7 @@ function GamePlayScreen({
           note.active = false;
           setCombo(0);
           setLastJudgment({ text: 'MISS', type: 'miss', key: Date.now() });
+          judgmentCountsRef.current.miss += 1;
         }
       }
 
@@ -907,6 +946,20 @@ function GamePlayScreen({
         if (note.active) spawnParticles(note.lane, color, 1);
       }
     });
+
+    // Hold-Note Only Micro Haptic Vibration (Triggers only while holding hold notes in manual play)
+    const hasActiveHold = notes.some(n => n.type === 'hold' && n.active && !n.hitEnd);
+    if (hasActiveHold && !isAutoPlay) {
+      const now = Date.now();
+      if (now - lastHapticTimeRef.current > 80) {
+        lastHapticTimeRef.current = now;
+        try {
+          if (navigator.vibrate) {
+            navigator.vibrate(20);
+          }
+        } catch (e) {}
+      }
+    }
 
     // 7. Particles
     const particles = particlesRef.current;

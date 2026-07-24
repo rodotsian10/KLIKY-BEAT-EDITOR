@@ -13,6 +13,8 @@ function SettingsModal({
   setKeyLabels,
   debugMode,
   setDebugMode,
+  isAutoPlay,
+  setIsAutoPlay,
   onClose,
   playKeycapSound 
 }) {
@@ -69,9 +71,24 @@ function SettingsModal({
                 setDebugMode(!debugMode);
               }}
             >
-              {debugMode ? 'ON (채보 에디터 테스트 켜짐)' : 'OFF (기본 모드)'}
+              {debugMode ? 'ON (채보 에디터/오토 켜짐)' : 'OFF (기본 모드)'}
             </button>
           </div>
+
+          {debugMode && (
+            <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '4px' }}>
+              <span className="setting-label">🤖 AUTO PLAY:</span>
+              <button 
+                className={`debug-toggle-btn ${isAutoPlay ? 'active' : ''}`}
+                onClick={() => {
+                  if (playKeycapSound) playKeycapSound();
+                  setIsAutoPlay(!isAutoPlay);
+                }}
+              >
+                {isAutoPlay ? 'ON (자동 올퍼펙트 / UNRANKED)' : 'OFF (수동 플레이)'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Key Label Customization */}
