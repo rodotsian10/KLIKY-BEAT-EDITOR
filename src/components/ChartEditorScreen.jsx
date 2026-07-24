@@ -18,9 +18,27 @@ function ChartEditorScreen({
   const [displayTime, setDisplayTime] = useState(0); // Only for UI banner display
   const [playbackRate, setPlaybackRate] = useState(1.0);
   const [customAudioUrl, setCustomAudioUrl] = useState(null);
+  const [loadedAudioName, setLoadedAudioName] = useState('');
 
   const [notes, setNotes] = useState(songs[0]?.chart || []);
   const [jsonText, setJsonText] = useState('');
+
+  const fileInputRef = useRef(null);
+
+  const handleLocalAudioUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setCustomAudioUrl(url);
+    setLoadedAudioName(file.name);
+    setCurrentSong(prev => ({
+      ...prev,
+      title: file.name.replace(/\.[^/.]+$/, ''),
+      artist: 'LOCAL FILE',
+      path: url,
+      encrypted: false
+    }));
+  };
 
   const audioRef = useRef(null);
   const activeHoldsRef = useRef({}); // { laneIdx: startBeat } - always active for all keys
@@ -329,11 +347,29 @@ function ChartEditorScreen({
           <div className="editor-card">
             <div className="card-title">🎵 SELECT SONG TRACK</div>
             <select className="editor-select" value={selectedSongId}
-              onChange={(e) => setSelectedSongId(e.target.value)}>
+              onChange={(e) => {
+                setSelectedSongId(e.target.value);
+                setCustomAudioUrl(null);
+              }}>
               {songs.map(s => (
                 <option key={s.id} value={s.id}>{s.title} ({s.artist})</option>
               ))}
             </select>
+
+            <input 
+              ref={fileInputRef} 
+              type="file" 
+              accept="audio/*" 
+              style={{ display: 'none' }}
+              onChange={handleLocalAudioUpload}
+            />
+            <button 
+              className="button-neon" 
+              style={{ marginTop: '6px', fontSize: '0.78rem', padding: '6px 10px' }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              📁 {loadedAudioName ? `✅ ${loadedAudioName}` : '내 폴더에서 음원 불러오기'}
+            </button>
           </div>
 
           <div className="editor-card">

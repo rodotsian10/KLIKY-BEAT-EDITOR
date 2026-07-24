@@ -678,12 +678,14 @@ function GamePlayScreen({
     ctx.clearRect(0, 0, width, height);
     const elapsedTime = getGameTime();
     
-    // Song fadeout trigger when reaching chart end
+    // Song fadeout trigger when reaching chart end (fade out 2s smoothly)
     if (elapsedTime >= chartEndTimeRef.current) {
       if (!isEndingRef.current) {
         isEndingRef.current = true;
         if (bgmGainNodeRef.current && audioCtx) {
-          bgmGainNodeRef.current.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
+          try {
+            bgmGainNodeRef.current.gain.linearRampToValueAtTime(0.0001, audioCtx.currentTime + 2.0);
+          } catch (e) {}
         }
         setTimeout(() => {
           isPlayingRef.current = false;
@@ -692,7 +694,7 @@ function GamePlayScreen({
       }
     }
 
-    if (bgmBuffer && elapsedTime >= bgmBuffer.duration) {
+    if (bgmBuffer && elapsedTime >= bgmBuffer.duration + 2.0) {
       isPlayingRef.current = false;
       onGameOver(scoreRef.current, maxComboRef.current, judgmentCountsRef.current, notesRef.current.length);
       return;
