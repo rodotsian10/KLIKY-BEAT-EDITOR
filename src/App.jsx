@@ -442,6 +442,7 @@ function App() {
   const [bgmVolume, setBgmVolume] = useState(0.3);
   const [sfxVolume, setSfxVolume] = useState(0.8);
   const [keyLabels, setKeyLabels] = useState(['D', 'F', 'J', 'K']);
+  const [debugMode, setDebugMode] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
 
   // Audio Cache Refs
@@ -620,6 +621,7 @@ function App() {
           song={selectedSong}
           noteSpeed={noteSpeed}
           setNoteSpeed={setNoteSpeed}
+          debugMode={debugMode}
           onBack={() => setGameState('PLAYLIST')}
           onPlay={loadSongAssets}
           playKeycapSound={playKeycapSound}
@@ -706,6 +708,8 @@ function App() {
           setSfxVolume={setSfxVolume}
           keyLabels={keyLabels}
           setKeyLabels={setKeyLabels}
+          debugMode={debugMode}
+          setDebugMode={setDebugMode}
           onResetHighscores={handleResetHighscores}
           onClose={() => setShowSettings(false)}
           playKeycapSound={playKeycapSound}

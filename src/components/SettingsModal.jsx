@@ -11,6 +11,8 @@ function SettingsModal({
   setSfxVolume,
   keyLabels,
   setKeyLabels,
+  debugMode,
+  setDebugMode,
   onClose,
   playKeycapSound 
 }) {
@@ -56,6 +58,19 @@ function SettingsModal({
               className="setting-slider"
             />
             <span className="setting-value">{Math.round(sfxVolume * 100)}%</span>
+          </div>
+
+          <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '6px' }}>
+            <span className="setting-label">🛠️ DEBUG MODE:</span>
+            <button 
+              className={`debug-toggle-btn ${debugMode ? 'active' : ''}`}
+              onClick={() => {
+                if (playKeycapSound) playKeycapSound();
+                setDebugMode(!debugMode);
+              }}
+            >
+              {debugMode ? 'ON (채보 에디터 테스트 켜짐)' : 'OFF (기본 모드)'}
+            </button>
           </div>
         </div>
 

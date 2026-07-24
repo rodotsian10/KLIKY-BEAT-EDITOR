@@ -85,3 +85,20 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+---
+
+## 📜 NCS (NoCopyrightSounds) 음악 사용 방식 및 질의 응답
+
+### Q. 게임/앱에 대한 간략한 설명과 음악 사용 방식에 대한 설명을 제공해 주세요.
+
+#### 1) 게임/앱에 대한 간략한 설명 (Game / App Description)
+> **`KLIKY-BEAT`**는 네온 사이버펑크 스타일의 3D 소실점 판정 트랙과 실제 기계식 키보드의 타건감을 결합한 4키(4-Lane) 기반의 인디 리듬 액션 게임입니다.
+> 
+> 플레이어는 템포에 맞춰 내려오는 채보 노트를 하단의 네온 키캡 버튼으로 타격하여 콤보를 이어가고 하이스코어를 달성하는 게임 플레이를 즐깁니다.
+
+#### 2) 음악 사용 방식에 대한 설명 (Music Usage Details)
+- **인게임 메인 플레이 음원 (In-Game Gameplay BGM)**: `Different Heaven & EH!DE - My Heart [NCS Release]` 음원은 프로젝트의 메인 스테이지 트랙으로 사용되며, 곡 선택 및 게임 플레이 시 인게임 배경음으로 제공됩니다.
+- **비트맵 동기화 (Beatmap Synchronization)**: 음원의 BPM(140)과 메인 비트에 맞춰 4개 레인상에 채보 노드가 동기화되어 내려오며, 플레이어의 입력 타격 및 판정과 실시간 연동됩니다.
+- **저작권 명시 (Attribution Transparency)**: 인게임 설정 메뉴 내 `📜 COPYRIGHT CREDITS` 및 서류 문서(`NCS_LICENSE_RESPONSE.md`)에 NCS의 공식 스트리밍/다운로드 링크 및 크레딧을 명확하게 표기하여 가이드라인을 준수합니다.
+

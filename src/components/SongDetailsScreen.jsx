@@ -5,6 +5,7 @@ function SongDetailsScreen({
   song, 
   noteSpeed, 
   setNoteSpeed, 
+  debugMode,
   onBack, 
   onPlay,
   playKeycapSound
@@ -99,23 +100,25 @@ function SongDetailsScreen({
           </button>
 
           {/* ====================================================== */}
-          {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST (REMOVE FOR PROD) */}
+          {/* ⚠️ DEBUG ONLY: CUSTOM CHART TEST (Conditioned by debugMode) */}
           {/* ====================================================== */}
-          <div className="details-debug-box">
-            <div className="details-debug-label">🛠️ DEBUG: CUSTOM CHART TEST</div>
-            <textarea
-              value={customChartText}
-              onChange={(e) => setCustomChartText(e.target.value)}
-              placeholder="에디터에서 복사한 채보 JSON 배열을 붙여넣으세요..."
-              className="details-debug-textarea"
-            />
-            <button
-              onClick={handlePlayCustomChart}
-              className="details-debug-btn"
-            >
-              PLAY CUSTOM CHART
-            </button>
-          </div>
+          {debugMode && (
+            <div className="details-debug-box">
+              <div className="details-debug-label">🛠️ DEBUG: CUSTOM CHART TEST</div>
+              <textarea
+                value={customChartText}
+                onChange={(e) => setCustomChartText(e.target.value)}
+                placeholder="에디터에서 복사한 채보 JSON 배열을 붙여넣으세요..."
+                className="details-debug-textarea"
+              />
+              <button
+                onClick={handlePlayCustomChart}
+                className="details-debug-btn"
+              >
+                PLAY CUSTOM CHART
+              </button>
+            </div>
+          )}
           {/* ====================================================== */}
           {/* ⚠️ DEBUG ONLY END */}
           {/* ====================================================== */}

@@ -72,6 +72,26 @@
   accent-color: var(--neon-cyan);
 }
 
+.debug-toggle-btn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.debug-toggle-btn.active {
+  background: rgba(255, 0, 127, 0.15);
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+  box-shadow: 0 0 10px var(--neon-magenta-glow);
+}
+
 .settings-copyright-section {
   width: 100%;
   margin-top: 25px;
