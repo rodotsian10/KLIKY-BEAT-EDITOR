@@ -171,22 +171,59 @@
 }
 
 .editor-time-banner {
-  padding: 10px 16px;
-  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 14px;
+  background: rgba(0, 0, 0, 0.7);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-family: var(--font-mono);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
+  gap: 12px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .editor-time-banner .cyan { color: var(--neon-cyan); font-weight: bold; }
 .editor-time-banner .yellow { color: var(--neon-yellow); font-weight: bold; }
 
+.track-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.track-ctrl-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-ctrl-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.track-ctrl-btn.play-btn {
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+}
+
+.track-ctrl-btn.play-btn.playing {
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+  background: rgba(255, 0, 127, 0.15);
+}
+
 .shortcut-hint {
   margin-left: auto;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
 }
 
@@ -407,4 +444,120 @@
   cursor: pointer;
   font-weight: bold;
   font-size: 0.9rem;
+}
+
+/* Lane Offsets for 4-lane grid (Relative percentages for mobile scaling) */
+.lane-offset-0 { left: calc(0 * 25% + 2.5%); width: 20%; }
+.lane-offset-1 { left: calc(1 * 25% + 2.5%); width: 20%; }
+.lane-offset-2 { left: calc(2 * 25% + 2.5%); width: 20%; }
+.lane-offset-3 { left: calc(3 * 25% + 2.5%); width: 20%; }
+
+.large-hold-ribbon.lane-offset-0 { left: calc(0 * 25% + 10.5%); width: 4%; }
+.large-hold-ribbon.lane-offset-1 { left: calc(1 * 25% + 10.5%); width: 4%; }
+.large-hold-ribbon.lane-offset-2 { left: calc(2 * 25% + 10.5%); width: 4%; }
+.large-hold-ribbon.lane-offset-3 { left: calc(3 * 25% + 10.5%); width: 4%; }
+
+/* Hidden by default on Desktop */
+.editor-mobile-nav {
+  display: none;
+}
+
+/* ── MOBILE RESPONSIVE STYLES (≤768px) ─────────────────────── */
+@media (max-width: 768px) {
+  .editor-header {
+    height: 48px;
+    padding: 0 10px;
+  }
+
+  .editor-title {
+    font-size: 0.85rem;
+  }
+
+  .editor-back-btn, .editor-test-btn {
+    font-size: 0.72rem !important;
+    padding: 5px 10px !important;
+  }
+
+  .editor-mobile-nav {
+    display: flex;
+    background: #0b0d18;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    padding: 4px;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-btn {
+    flex: 1;
+    padding: 8px 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .mobile-nav-btn.active {
+    background: rgba(0, 255, 255, 0.15);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+  }
+
+  .editor-body-layout {
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Hide panels by default on mobile unless active tab */
+  .editor-left-panel,
+  .editor-center-panel,
+  .editor-right-panel {
+    display: none !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+  }
+
+  .editor-left-panel.mobile-visible,
+  .editor-center-panel.mobile-visible,
+  .editor-right-panel.mobile-visible {
+    display: flex !important;
+  }
+
+  /* Center Panel Grid Scaling for Mobile */
+  .large-track-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-left: none;
+    border-right: none;
+  }
+
+  .large-track-lane {
+    width: 25% !important;
+  }
+
+  .lane-trigger-btn {
+    font-size: 0.75rem;
+    padding: 6px 2px;
+  }
+
+  .note-text-label {
+    font-size: 0.62rem;
+  }
+
+  .editor-time-banner {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .shortcut-hint {
+    margin-left: 0;
+    width: 100%;
+    font-size: 0.65rem;
+  }
 }

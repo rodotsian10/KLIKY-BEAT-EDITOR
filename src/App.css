@@ -226,3 +226,44 @@
   font-weight: 900;
   color: #fff;
 }
+
+/* Mobile responsive fixes for Overlay / Game Over screens */
+@media (max-width: 768px) {
+  .overlay-screen {
+    padding: 16px 12px;
+    overflow-y: auto;
+    justify-content: flex-start;
+  }
+
+  .menu-title {
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    margin-top: 10px;
+  }
+
+  .result-tier-badge {
+    font-size: 2.2rem;
+    padding: 4px 24px;
+    border-radius: 14px;
+  }
+
+  .result-stats-grid {
+    gap: 6px 12px;
+    padding: 10px 16px;
+    margin: 6px 0;
+    max-width: 280px;
+  }
+
+  .unranked-badge {
+    font-size: 0.68rem;
+    padding: 3px 8px;
+    text-align: center;
+  }
+
+  .button-neon {
+    font-size: 0.9rem;
+    padding: 10px 24px;
+    margin-bottom: 8px;
+  }
+}

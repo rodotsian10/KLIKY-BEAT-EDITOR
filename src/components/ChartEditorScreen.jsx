@@ -22,6 +22,7 @@ function ChartEditorScreen({
 
   const [notes, setNotes] = useState(songs[0]?.chart || []);
   const [jsonText, setJsonText] = useState('');
+  const [mobileTab, setMobileTab] = useState('TRACK'); // TRACK, SETTINGS, LIST
 
   const fileInputRef = useRef(null);
 
@@ -219,6 +220,36 @@ function ChartEditorScreen({
     }
   };
 
+  const scrubBackward = () => {
+    if (audioRef.current) {
+      const t = Math.max(0, audioRef.current.currentTime - 1.0);
+      audioRef.current.currentTime = t;
+      setDisplayTime(t);
+      const beat = t / (60 / bpmRef.current);
+      if (playheadRef.current) playheadRef.current.style.top = `${beat * zoomRef.current}px`;
+      if (playheadTagRef.current) playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
+      if (trackScrollRef.current) {
+        const vh = trackScrollRef.current.clientHeight;
+        trackScrollRef.current.scrollTop = Math.max(0, beat * zoomRef.current - vh * 0.33);
+      }
+    }
+  };
+
+  const scrubForward = () => {
+    if (audioRef.current) {
+      const t = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + 1.0);
+      audioRef.current.currentTime = t;
+      setDisplayTime(t);
+      const beat = t / (60 / bpmRef.current);
+      if (playheadRef.current) playheadRef.current.style.top = `${beat * zoomRef.current}px`;
+      if (playheadTagRef.current) playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
+      if (trackScrollRef.current) {
+        const vh = trackScrollRef.current.clientHeight;
+        trackScrollRef.current.scrollTop = Math.max(0, beat * zoomRef.current - vh * 0.33);
+      }
+    }
+  };
+
   // Keyboard Shortcuts (Scrubbing with ← / → & Live Tap Recording)
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -231,34 +262,12 @@ function ChartEditorScreen({
       }
       if (e.code === 'ArrowLeft') {
         e.preventDefault();
-        if (audioRef.current) {
-          const t = Math.max(0, audioRef.current.currentTime - 1.0);
-          audioRef.current.currentTime = t;
-          setDisplayTime(t);
-          const beat = t / (60 / bpmRef.current);
-          if (playheadRef.current) playheadRef.current.style.top = `${beat * zoomRef.current}px`;
-          if (playheadTagRef.current) playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
-          if (trackScrollRef.current) {
-            const vh = trackScrollRef.current.clientHeight;
-            trackScrollRef.current.scrollTop = Math.max(0, beat * zoomRef.current - vh * 0.33);
-          }
-        }
+        scrubBackward();
         return;
       }
       if (e.code === 'ArrowRight') {
         e.preventDefault();
-        if (audioRef.current) {
-          const t = Math.min(audioRef.current.duration || 0, audioRef.current.currentTime + 1.0);
-          audioRef.current.currentTime = t;
-          setDisplayTime(t);
-          const beat = t / (60 / bpmRef.current);
-          if (playheadRef.current) playheadRef.current.style.top = `${beat * zoomRef.current}px`;
-          if (playheadTagRef.current) playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
-          if (trackScrollRef.current) {
-            const vh = trackScrollRef.current.clientHeight;
-            trackScrollRef.current.scrollTop = Math.max(0, beat * zoomRef.current - vh * 0.33);
-          }
-        }
+        scrubForward();
         return;
       }
 
@@ -337,10 +346,32 @@ function ChartEditorScreen({
         </button>
       </header>
 
+      {/* MOBILE TAB SELECTOR (Mobile Only) */}
+      <div className="editor-mobile-nav">
+        <button 
+          className={`mobile-nav-btn ${mobileTab === 'SETTINGS' ? 'active' : ''}`}
+          onClick={() => setMobileTab('SETTINGS')}
+        >
+          ⚙️ 설정/레코딩
+        </button>
+        <button 
+          className={`mobile-nav-btn ${mobileTab === 'TRACK' ? 'active' : ''}`}
+          onClick={() => setMobileTab('TRACK')}
+        >
+          🎛️ 채보 트랙
+        </button>
+        <button 
+          className={`mobile-nav-btn ${mobileTab === 'LIST' ? 'active' : ''}`}
+          onClick={() => setMobileTab('LIST')}
+        >
+          📜 노트목록 ({notes.length})
+        </button>
+      </div>
+
       <div className="editor-body-layout">
 
         {/* LEFT PANEL */}
-        <div className="editor-left-panel">
+        <div className={`editor-left-panel ${mobileTab === 'SETTINGS' ? 'mobile-visible' : ''}`}>
           <div className="editor-card">
             <div className="card-title">🎵 SELECT SONG TRACK</div>
             <select className="editor-select" value={selectedSongId}
@@ -439,13 +470,29 @@ function ChartEditorScreen({
         </div>
 
         {/* CENTER: 4-LANE TRACK */}
-        <div className="editor-center-panel">
+        <div className={`editor-center-panel ${mobileTab === 'TRACK' ? 'mobile-visible' : ''}`}>
           <div className="editor-time-banner">
-            TIME: <span className="cyan">{displayTime.toFixed(2)}s</span>
-            <span style={{ margin: '0 12px' }}>|</span>
-            BEAT: <span className="yellow">{currentBeat.toFixed(2)}b</span>
+            <div className="time-beat-info">
+              TIME: <span className="cyan">{displayTime.toFixed(2)}s</span>
+              <span style={{ margin: '0 8px' }}>|</span>
+              BEAT: <span className="yellow">{currentBeat.toFixed(2)}b</span>
+            </div>
+
+            {/* Playback controls on track banner */}
+            <div className="track-controls-group">
+              <button className="track-ctrl-btn" onClick={scrubBackward} title="1초 뒤로 (←)">
+                ⏪ -1s
+              </button>
+              <button className={`track-ctrl-btn play-btn ${isPlaying ? 'playing' : ''}`} onClick={togglePlay} title="재생/일시정지 (Space)">
+                {isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
+              </button>
+              <button className="track-ctrl-btn" onClick={scrubForward} title="1초 앞으로 (→)">
+                ⏩ +1s
+              </button>
+            </div>
+
             <span className="shortcut-hint">
-              ⌨️ [Space] Play/Pause | [←/→] ±1s | 1/2/3/4 터치 & [D/F/J/K] 꾹 누르면 롱노트
+              ⌨️ 1/2/3/4 터치 & [D/F/J/K] 꾹 누르면 롱노트
             </span>
           </div>
 
@@ -490,21 +537,19 @@ function ChartEditorScreen({
               {/* Notes */}
               {notes.map((note, idx) => {
                 const topPx = note.beat * zoomLevel;
-                const leftPx = note.lane * 130 + 10;
                 const color = laneColors[note.lane];
                 return (
                   <React.Fragment key={idx}>
                     {note.type === 'hold' && (
-                      <div className="large-hold-ribbon" style={{
+                      <div className={`large-hold-ribbon lane-offset-${note.lane}`} style={{
                         top: `${topPx}px`,
                         height: `${(note.durationBeats || 1) * zoomLevel}px`,
-                        left: `${note.lane * 130 + 55}px`,
                         background: color,
                         boxShadow: `0 0 14px ${color}`
                       }} />
                     )}
-                    <div className="large-note-block"
-                      style={{ top: `${topPx}px`, left: `${leftPx}px`, background: color, boxShadow: `0 0 16px ${color}` }}
+                    <div className={`large-note-block lane-offset-${note.lane}`}
+                      style={{ top: `${topPx}px`, background: color, boxShadow: `0 0 16px ${color}` }}
                       onClick={(e) => deleteNote(idx, e)}
                       title={`Beat ${note.beat} L${note.lane + 1} — Click to Delete`}>
                       <span className="note-text-label">B {note.beat.toFixed(2)}</span>
@@ -517,7 +562,7 @@ function ChartEditorScreen({
         </div>
 
         {/* RIGHT: Note List */}
-        <div className="editor-right-panel">
+        <div className={`editor-right-panel ${mobileTab === 'LIST' ? 'mobile-visible' : ''}`}>
           <div className="card-title">📜 NOTE LIST ({notes.length})</div>
           <div className="inspector-scroll-list">
             {notes.map((note, idx) => (
