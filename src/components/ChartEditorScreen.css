@@ -198,7 +198,7 @@
   display: flex;
   justify-content: center;
   padding: 20px 0 60px 0;
-  scroll-behavior: smooth;
+  /* NO scroll-behavior:smooth — conflicts with direct rAF scrollTop assignment */
 }
 
 .large-track-grid {
@@ -277,7 +277,7 @@
   box-shadow: 0 0 15px var(--neon-magenta-glow);
   z-index: 15;
   pointer-events: none;
-  transition: top 0.05s linear;
+  /* NO CSS transition — rAF moves this directly every frame */
 }
 
 .playhead-tag {

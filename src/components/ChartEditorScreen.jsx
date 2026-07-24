@@ -117,25 +117,28 @@ function ChartEditorScreen({
       const spb = 60 / bpmRef.current;
       const beat = t / spb;
       const z = zoomRef.current;
-      const topPx = beat * z;
+      // +20 to account for padding-top of the container
+      const topPx = beat * z + 20;
 
-      // Directly move playhead bar
+      // Directly move playhead bar (topPx relative to grid, not container)
+      const gridTopPx = beat * z;
       if (playheadRef.current) {
-        playheadRef.current.style.top = `${topPx}px`;
+        playheadRef.current.style.top = `${gridTopPx}px`;
       }
       if (playheadTagRef.current) {
         playheadTagRef.current.textContent = `NOW ${beat.toFixed(2)}b`;
       }
 
-      // Auto-scroll: keep playhead centered in viewport (1/3 from top)
+      // Auto-scroll: keep playhead at ~33% from top of visible viewport
       if (trackScrollRef.current) {
         const container = trackScrollRef.current;
         const viewportHeight = container.clientHeight;
+        // targetScrollTop so that the playhead appears at 33% from top
         const targetScrollTop = topPx - viewportHeight * 0.33;
         container.scrollTop = Math.max(0, targetScrollTop);
       }
 
-      // Update banner display (throttled via state, lower frequency OK for text)
+      // Update banner text only (low cost React state update for display)
       setDisplayTime(t);
 
       animFrameRef.current = requestAnimationFrame(tick);
