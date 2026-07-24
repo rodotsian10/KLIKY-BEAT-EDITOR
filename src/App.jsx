@@ -16,6 +16,7 @@ const SONGS = [
     duration: '2:01',
     difficulty: 'HARD',
     highScoreKey: 'high_score_my_heart',
+    coverColor: '#00ffff',
     chart: [
       { beat: 1.00, lane: 0, type: 'hold', durationBeats: 1.00 },
       { beat: 2.50, lane: 1, type: 'short' },
@@ -565,7 +566,19 @@ function App() {
       if (!bgmBuffer) {
         const response = await fetch(encodeURI(song.path));
         if (!response.ok) throw new Error('BGM failed to fetch');
-        const arrayBuf = await response.arrayBuffer();
+        let arrayBuf = await response.arrayBuffer();
+
+        // If track is encrypted asset, perform in-memory XOR decryption
+        if (song.encrypted) {
+          const secretKey = new TextEncoder().encode('KLIKY_BEAT_NEKO_LEGENDS_CANON_HARP_2026');
+          const view = new Uint8Array(arrayBuf);
+          const decrypted = new Uint8Array(arrayBuf.byteLength);
+          for (let i = 0; i < view.length; i++) {
+            decrypted[i] = view[i] ^ secretKey[i % secretKey.length];
+          }
+          arrayBuf = decrypted.buffer;
+        }
+
         bgmBuffer = await ctx.decodeAudioData(arrayBuf);
         loadedBgmBuffersRef.current[song.id] = bgmBuffer;
       }

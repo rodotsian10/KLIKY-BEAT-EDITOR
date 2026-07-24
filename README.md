@@ -77,6 +77,19 @@ npm run build
 
 ---
 
+## 🎵 음원 출처 및 저작권 (BGM Credits)
+
+1. **My Heart**
+   - Artist: Different Heaven & EH!DE
+   - License: NoCopyrightSounds (NCS Release)
+   - Link: http://ncs.io/myheart
+
+2. **Canon in Harp**
+   - Music: "Canon in Harp" by Neko Legends (via Unity Asset Store)
+   - License: Unity Asset Store Music License (In-Memory Encrypted Asset Protection Applied)
+
+---
+
 ## 📄 라이선스 (License)
 
 Copyright 2026 rodotsian10.

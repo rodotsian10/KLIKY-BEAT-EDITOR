@@ -125,12 +125,16 @@ function SettingsModal({
           
           {showCopyright && (
             <div className="copyright-content-box">
-              <p className="copyright-item-title">🎵 BGM CREDIT (음원 출처)</p>
-              <div className="copyright-text-box">
-                Song: Different Heaven & EH!DE - My Heart [NCS Release]<br />
+              <p className="copyright-item-title">🎵 BGM CREDITS (음원 출처)</p>
+              <div className="copyright-text-box" style={{ marginBottom: '8px' }}>
+                Song 1: Different Heaven & EH!DE - My Heart [NCS Release]<br />
                 Music provided by NoCopyrightSounds.<br />
                 Free Download/Stream: <span className="copyright-link">http://ncs.io/myheart</span><br />
                 Watch: <span className="copyright-link">http://youtu.be/jK2aIUmmdP4</span>
+              </div>
+              <div className="copyright-text-box">
+                Song 2: Music: "Canon in Harp" by Neko Legends (via Unity Asset Store)<br />
+                Licensed via Unity Asset Store Music License.
               </div>
               
               <p className="copyright-item-title" style={{ marginTop: '10px' }}>🔊 KEY SFX CREDIT (타건음 출처)</p>
