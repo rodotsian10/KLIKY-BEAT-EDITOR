@@ -143,7 +143,7 @@
 }
 
 .keyboard-area {
-  margin: 6px auto 16px auto;
+  margin: 4px auto 10px auto;
   padding: 0px;
   background: linear-gradient(to top, rgba(5,5,10,1) 80%, rgba(5,5,10,0));
   display: flex;
