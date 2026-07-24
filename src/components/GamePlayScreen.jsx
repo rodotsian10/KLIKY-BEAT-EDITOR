@@ -90,8 +90,8 @@ function GamePlayScreen({
       const resizeObserver = new ResizeObserver((entries) => {
         for (let entry of entries) {
           const { width, height } = entry.contentRect;
-          // In landscape, limit the canvas width dynamically to center the track
-          setCanvasSize({ width: Math.min(width, height * 1.3), height: height });
+          // Full container width — lanes always fill the screen
+          setCanvasSize({ width, height });
         }
       });
       resizeObserver.observe(containerRef.current);
@@ -304,7 +304,7 @@ function GamePlayScreen({
   const getPerspectiveCoords = (timeDiff, lane, visualDuration, width, height) => {
     const vanishingPointX = width / 2;
     const y_top = height * 0.15;
-    const y_bottom = height - 15;
+    const y_bottom = height - 4;
     
     const z_raw = timeDiff / visualDuration;
     const Z = z_raw * 3.5 + 1.0; 
@@ -312,8 +312,7 @@ function GamePlayScreen({
     const R = 1.0 / (Z * Z);
     const y = y_top + (y_bottom - y_top) * R;
     
-    // Constant lane width relative to heights to ensure physical vertical spacing
-    const laneWidthBottom = Math.min(width * 0.78, height * 0.85);
+    const laneWidthBottom = width * 0.88;
     const currentLaneWidth = laneWidthBottom * R;
     
     const x = vanishingPointX + (lane - 1.5) * (currentLaneWidth / 4);
@@ -603,8 +602,8 @@ function GamePlayScreen({
 
     const vanishingPointX = width / 2;
     const y_top = height * 0.15;
-    const y_bottom = height - 15;
-    const laneWidthBottom = Math.min(width * 0.78, height * 0.85);
+    const y_bottom = height - 4;
+    const laneWidthBottom = width * 0.88;
 
     // Render static standby board if waiting for user to start
     if (isStandby) {
@@ -1000,7 +999,7 @@ function GamePlayScreen({
         )}
       </main>
 
-      <section className="keyboard-area" style={{ width: `${Math.min(canvasSize.width * 0.78, canvasSize.height * 0.85)}px` }}>
+      <section className="keyboard-area" style={{ width: `${canvasSize.width * 0.88}px` }}>
         {KEY_DETAILS.map((kd, idx) => (
           <Keycap
             key={kd.key}
