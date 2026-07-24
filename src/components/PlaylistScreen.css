@@ -45,12 +45,15 @@
 }
 
 .song-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
   overflow-y: auto;
   flex: 1;
   padding-bottom: 20px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .song-list::-webkit-scrollbar {
@@ -58,10 +61,12 @@
 }
 
 .song-card {
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(135deg, rgba(20, 20, 35, 0.7) 0%, rgba(10, 10, 20, 0.7) 100%);
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 16px;
-  padding: 16px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   gap: 16px;
