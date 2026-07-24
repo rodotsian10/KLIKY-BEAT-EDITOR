@@ -84,17 +84,18 @@ function GamePlayScreen({
     maxComboRef.current = maxCombo;
   }, [maxCombo]);
 
-  // Resize listener
+  const playAreaRef = useRef(null);
+
+  // Resize listener observing actual play-area bounds
   useEffect(() => {
-    if (containerRef.current) {
+    if (playAreaRef.current) {
       const resizeObserver = new ResizeObserver((entries) => {
         for (let entry of entries) {
           const { width, height } = entry.contentRect;
-          // Full container width — lanes always fill the screen
           setCanvasSize({ width, height });
         }
       });
-      resizeObserver.observe(containerRef.current);
+      resizeObserver.observe(playAreaRef.current);
       return () => resizeObserver.disconnect();
     }
   }, []);
@@ -312,7 +313,7 @@ function GamePlayScreen({
     const R = 1.0 / (Z * Z);
     const y = y_top + (y_bottom - y_top) * R;
     
-    const laneWidthBottom = Math.min(width * 0.82, 880);
+    const laneWidthBottom = width * 0.85;
     const currentLaneWidth = laneWidthBottom * R;
     
     const x = vanishingPointX + (lane - 1.5) * (currentLaneWidth / 4);
@@ -603,7 +604,7 @@ function GamePlayScreen({
     const vanishingPointX = width / 2;
     const y_top = height * 0.05;
     const y_bottom = height - 10;
-    const laneWidthBottom = Math.min(width * 0.82, 880);
+    const laneWidthBottom = width * 0.85;
 
     // Render static standby board if waiting for user to start
     if (isStandby) {
@@ -972,7 +973,7 @@ function GamePlayScreen({
         </div>
       </header>
 
-      <main className="play-area">
+      <main className="play-area" ref={playAreaRef}>
         <canvas 
           className="game-canvas"
           ref={canvasRef}
@@ -999,7 +1000,7 @@ function GamePlayScreen({
         )}
       </main>
 
-      <section className="keyboard-area" style={{ width: `${Math.min(canvasSize.width * 0.82, 880)}px` }}>
+      <section className="keyboard-area" style={{ width: `${canvasSize.width * 0.85}px` }}>
         {KEY_DETAILS.map((kd, idx) => (
           <Keycap
             key={kd.key}
