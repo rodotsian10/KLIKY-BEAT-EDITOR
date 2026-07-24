@@ -5,6 +5,7 @@ import SongDetailsScreen from './components/SongDetailsScreen';
 import GamePlayScreen from './components/GamePlayScreen';
 import ChartEditorScreen from './components/ChartEditorScreen';
 import SettingsModal from './components/SettingsModal';
+import { CANON_CHART } from './canonChart';
 import './App.css';
 
 const SONGS = [
@@ -431,10 +432,10 @@ const SONGS = [
     encrypted: true,
     bpm: 100,
     duration: '4:00',
-    difficulty: 'NORMAL',
+    difficulty: 'HARD',
     highScoreKey: 'high_score_canon_harp',
     coverColor: '#ff66cc',
-    chart: []
+    chart: CANON_CHART
   }
 ];
 
