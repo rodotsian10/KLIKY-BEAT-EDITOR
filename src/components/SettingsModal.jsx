@@ -78,28 +78,57 @@ function SettingsModal({
           </div>
 
           {debugMode && (
-            <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '8px' }}>
-              <span className="setting-label">🎛️ CHART STUDIO:</span>
-              <button 
-                className="debug-toggle-btn active"
-                style={{ 
-                  color: '#ffffff', 
-                  backgroundColor: 'rgba(255, 0, 127, 0.3)', 
-                  borderColor: 'var(--neon-magenta)', 
-                  boxShadow: '0 0 15px var(--neon-magenta-glow)',
-                  fontWeight: 'bold',
-                  whiteSpace: 'nowrap',
-                  padding: '8px 16px'
-                }}
-                onClick={() => {
-                  if (playKeycapSound) playKeycapSound();
-                  onClose();
-                  if (onOpenEditor) onOpenEditor();
-                }}
-              >
-                OPEN CHART STUDIO
-              </button>
-            </div>
+            <>
+              <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '8px' }}>
+                <span className="setting-label">🎛️ CHART STUDIO:</span>
+                <button 
+                  className="debug-toggle-btn active"
+                  style={{ 
+                    color: '#ffffff', 
+                    backgroundColor: 'rgba(255, 0, 127, 0.3)', 
+                    borderColor: 'var(--neon-magenta)', 
+                    boxShadow: '0 0 15px var(--neon-magenta-glow)',
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    padding: '8px 16px'
+                  }}
+                  onClick={() => {
+                    if (playKeycapSound) playKeycapSound();
+                    onClose();
+                    if (onOpenEditor) onOpenEditor();
+                  }}
+                >
+                  OPEN CHART STUDIO
+                </button>
+              </div>
+
+              <div className="setting-row" style={{ gridColumn: 'span 2', marginTop: '8px' }}>
+                <span className="setting-label">🌐 WEB STUDIO LINK:</span>
+                <a 
+                  href="https://rodotsian10.github.io/KLIKY-BEAT-EDITOR/?mode=editor"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="debug-toggle-btn active"
+                  style={{ 
+                    color: '#00ffff', 
+                    backgroundColor: 'rgba(0, 255, 255, 0.15)', 
+                    borderColor: 'var(--neon-cyan)', 
+                    boxShadow: '0 0 15px var(--neon-cyan-glow)',
+                    fontWeight: 'bold',
+                    whiteSpace: 'nowrap',
+                    padding: '8px 16px',
+                    textDecoration: 'none',
+                    textAlign: 'center',
+                    display: 'inline-block'
+                  }}
+                  onClick={() => {
+                    if (playKeycapSound) playKeycapSound();
+                  }}
+                >
+                  🌐 OPEN WEB EDITOR ↗
+                </a>
+              </div>
+            </>
           )}
         </div>
 
