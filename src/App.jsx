@@ -447,6 +447,7 @@ function App() {
   const [debugMode, setDebugMode] = useState(false);
   const [isAutoPlay, setIsAutoPlay] = useState(false);
   const [isCustomChart, setIsCustomChart] = useState(false);
+  const [isFromEditor, setIsFromEditor] = useState(false);
   const [gameResult, setGameResult] = useState(null);
   const [loadProgress, setLoadProgress] = useState(0);
 
@@ -679,8 +680,12 @@ function App() {
           audioCtx={audioCtxRef.current}
           sfxBuffers={sfxBuffersRef.current}
           playKeycapSound={playKeycapSound}
-          onBack={() => setGameState('PLAYLIST')}
+          onBack={() => {
+            setIsFromEditor(false);
+            setGameState('PLAYLIST');
+          }}
           onTestPlay={(testSong) => {
+            setIsFromEditor(true);
             loadSongAssets(testSong);
           }}
         />
@@ -747,7 +752,13 @@ function App() {
 
             setGameState('GAME_OVER');
           }}
-          onQuit={() => setGameState('PLAYLIST')}
+          onQuit={() => {
+            if (isFromEditor) {
+              setGameState('EDITOR');
+            } else {
+              setGameState('PLAYLIST');
+            }
+          }}
         />
       )}
 
@@ -800,13 +811,23 @@ function App() {
               PLAY AGAIN
             </button>
             
-            <button 
-              className="button-neon" 
-              style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
-              onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
-            >
-              SONG SELECT
-            </button>
+            {isFromEditor ? (
+              <button 
+                className="button-neon" 
+                style={{ borderColor: 'var(--neon-cyan)', boxShadow: '0 0 15px var(--neon-cyan-glow)' }}
+                onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('EDITOR'); }}
+              >
+                BACK TO EDITOR
+              </button>
+            ) : (
+              <button 
+                className="button-neon" 
+                style={{ borderColor: 'var(--neon-magenta)', boxShadow: '0 0 15px var(--neon-magenta-glow)' }}
+                onClick={() => { if (playKeycapSound) playKeycapSound(); setGameState('PLAYLIST'); }}
+              >
+                SONG SELECT
+              </button>
+            )}
           </div>
         </div>
       )}
