@@ -71,7 +71,7 @@ function SettingsModal({
                 setDebugMode(!debugMode);
               }}
             >
-              {debugMode ? 'ON (디버그 모드 켜짐)' : 'OFF (기본 모드)'}
+              {debugMode ? 'ON' : 'OFF'}
             </button>
           </div>
         </div>
